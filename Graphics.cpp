@@ -30,6 +30,10 @@ void Gameboy::input() {
 		steps = 23000;
 		Macro = 'n';
 	}
+	if (GetKey(olc::Key::NP2).bReleased) {
+		steps = 28739;
+		Macro = 'n';
+	}
 
 	if (Macro == 'm') {
 
@@ -41,7 +45,6 @@ void Gameboy::input() {
 
 		if (GetKey(olc::Key::BACK).bReleased)
 			steps = 0;
-
 
 		if (GetKey(olc::Key::N).bReleased)
 			Macro = 'n';
@@ -249,8 +252,9 @@ bool Gameboy::OnUserUpdate(float fElapsedTime) {
 	input();
 	if (ready) {
 		_cpu.cycle();
-		
 		sprites = _cpu.oam_scan();
+		uint8_t bg = 
+
 
 		ready = false;
 	}

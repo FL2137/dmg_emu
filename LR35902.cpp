@@ -10,8 +10,8 @@
 
 void LR35902::load_bootrom() {
     ifstream bootrom("dmg_boot.gb", ios::binary | ios::ate);
-
     if (bootrom.is_open()) {
+    
         streamsize size = bootrom.tellg();
         char* buffer = new char[size];
         bootrom.seekg(0, ios::beg);
@@ -46,7 +46,7 @@ void LR35902::load_rom(const char* filename, string mbc) {
     }
     else
         cout << "CANT LOAD ROM\n";
-
+    
     load_bootrom();
 
 }
@@ -212,12 +212,15 @@ void LR35902::lookup() {
 
     case 0xC3: JP(FLAG::NONE); break; //VBLANK  (draw to screen);
 
+
+
+
     case 0x20: JR(FLAG::NZ); break; 
     case 0x30: JR(FLAG::NC); break; 
 
 
-    case 0x18: pc += 2; /*JR(NONE) is here */ break;
-    case 0x28: pc += 2; /*JR(FLAG::Z) is here */ break;
+    case 0x18: JR(FLAG::NONE); break;
+    case 0x28: JR(FLAG::Z); break;
 
 
     case 0x17: RL(AF, 'h'); pc--; set_flag(Z, 0); break;//Xd
@@ -387,9 +390,12 @@ void LR35902::cycle() {
 
 
     
+
+
+    
     opcode = ram[pc];
     lookup();
-
+    cycles_done++;
 
 }
 
@@ -506,22 +512,8 @@ void LR35902::JR(FLAG f) {
         throw u;
     };
 
-    if (f == FLAG::NZ) {
-        if (check_flag(FLAG::Z) == 0) {
-            //lol, REMEMBER ABOUT CONVERSION TO SIGNED_8
-            int8_t s8 = unsigned_to_signed(ram[pc + 1]);
-            pc += s8 + 2;
-            address = show_hex(pc);
-
-            cycle_timer = 12;
-        }
-        else {
-            pc += 2;
-            cycle_timer = 8;
-        }
-    }
-    else if (f == FLAG::NC) {
-        if (check_flag(FLAG::C) == 0) {
+    if (f == FLAG::NZ || f == FLAG::NC) {
+        if (check_flag(f) == 0) {
             int8_t s8 = unsigned_to_signed(ram[pc + 1]);
             pc += s8 + 2;
             cycle_timer = 12;
@@ -547,7 +539,6 @@ void LR35902::JR(FLAG f) {
             cycle_timer = 8;
         }
     }
-
 }
 
 

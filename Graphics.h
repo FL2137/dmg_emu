@@ -63,7 +63,7 @@ public:
 		DrawString(olc::vi2d(10, 170), "Steps:"+to_string(steps), olc::WHITE, 2);
 		auto op = _cpu.ram[_cpu.pc];
 		DrawString(olc::vi2d(10, 190), "Opcode:" + show_hex(op), olc::WHITE, 2);
-
+		DrawString(olc::vi2d(10, 210), "Cycles passed: " + to_string(_cpu.cycles_done), olc::WHITE, 2);
 	}
 
 	void DrawLogo();

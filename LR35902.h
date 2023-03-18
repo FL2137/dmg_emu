@@ -42,6 +42,9 @@ public:
 	bool IME;
 	bool IE;
 
+	int dot_count;
+
+	int cycles_done = 0;
 
 	int opcode;
 	void lookup();
