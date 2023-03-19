@@ -29,7 +29,6 @@ public:
 
 
 
-
 	bool IME;
 	bool IE;
 

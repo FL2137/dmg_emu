@@ -249,10 +249,10 @@ void LR35902::lookup() {
     case 0x51: LD8(DE, 'h', &BC, 'l'); break;
     case 0x52: LD8(DE, 'h', &DE, 'h'); break;
     case 0x53: LD8(DE, 'h', &DE, 'l'); break;
-    case 0x54: LD8(DE, 'h', &DE, 'h'); break;
-    case 0x55: LD8(DE, 'h', &DE, 'l'); break;
-    case 0x56: LD8(DE, 'h', &DE, '-'); break;
-    case 0x57: LD8(DE, 'h', &DE, 'h'); break;
+    case 0x54: LD8(DE, 'h', &HL, 'h'); break;
+    case 0x55: LD8(DE, 'h', &HL, 'l'); break;
+    case 0x56: LD8(DE, 'h', &HL, '-'); break;
+    case 0x57: LD8(DE, 'h', &AF, 'h'); break;
 
     case 0x58: LD8(DE, 'l', &BC, 'h'); break;
     case 0x59: LD8(DE, 'l', &BC, 'l'); break;
@@ -377,6 +377,11 @@ void LR35902::cycle() {
     if (ram[0xFF44] == ram[0xFF45]) {  //if LY==LYC
         set_bit(*stat, 2); //stat.2 = true
     }
+    
+    if (get_bit(*lcdc, 7) == 1) {
+
+    }
+
 
     
     opcode = ram[pc];
@@ -490,7 +495,9 @@ void LR35902::JR(FLAG f) {
     };
 
     if (f == FLAG::NZ || f == FLAG::NC) {
-        if (check_flag(f) == 0) {
+        bool flag = f == NZ ? check_flag(FLAG::Z) : check_flag(FLAG::C);
+
+        if (flag == false) {
             int8_t s8 = unsigned_to_signed(ram[pc + 1]);
             pc += s8 + 2;
             cycle_timer = 12;

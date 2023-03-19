@@ -84,6 +84,11 @@ public:
 		//cout << count << endl;
 	}
 
+
+	void RenderBackground();
+
+
+
 	void MakeTile(int data[8], int(&tile)[32]) {
 		int count = 0;
 		for (int t = 0; t < 8; t += 2) {

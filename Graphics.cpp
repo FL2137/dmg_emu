@@ -23,8 +23,9 @@ void Gameboy::input() {
 		}
 	}
 
-	if (GetKey(olc::Key::Q).bReleased)
+	if (GetKey(olc::Key::Q).bReleased) {
 		Mode = (Mode == "Debug") ? "Play" : "Debug";
+	}
 
 	if (GetKey(olc::Key::NP1).bReleased) {
 		steps = 23000;
@@ -237,6 +238,9 @@ void Gameboy::drawSprite(uint8_t data[4]) {
 }
 
 
+void Gameboy::RenderBackground() {
+}
+
 bool Gameboy::OnUserUpdate(float fElapsedTime) {
 	int c = 0;
 	
@@ -252,10 +256,17 @@ bool Gameboy::OnUserUpdate(float fElapsedTime) {
 	input();
 	if (ready) {
 		_cpu.cycle();
-		sprites = _cpu.oam_scan();
-		uint8_t bg = 
+
+		//LCD and PPU turned on
+		if (_cpu.get_bit(*(_cpu.lcdc), 7) == 1) {
+			sprites = _cpu.oam_scan();
+			
 
 
+
+
+
+		}
 		ready = false;
 	}
 	
@@ -278,6 +289,7 @@ bool Gameboy::OnUserUpdate(float fElapsedTime) {
 		/*for (int i = address; i >= address - 100; i--) {
 			cout <<show_hex(address)<< " : " << _cpu.ram[i] << endl;
 		}*/
+		system("CLS");
 
 		for (int i = address; i <= address+300; i++) {
 			cout << show_hex(i) << " : " << show_hex(_cpu.ram[i]) << endl;
