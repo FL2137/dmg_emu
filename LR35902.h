@@ -28,15 +28,6 @@ public:
 	};
 
 
-	struct REGISTER {
-		uint8_t hi = 0x00;
-		uint8_t lo = 0x00;
-	};
-
-
-	REGISTER
-		_AF, _BC,
-		_DE, _HL;
 
 
 	bool IME;
@@ -60,6 +51,7 @@ public:
 	uint16_t stkp = 0xFFFE;
 	uint16_t pc = 0x0000;
 
+	uint8_t* ram;
 
 
 	int get_bit(uint8_t obj, int nbit) {
@@ -106,21 +98,13 @@ public:
 	void load_bootrom();
 	void init();
 
-	uint8_t* ram;
 
 private:
 
-	//these shouldnt exist
-	uint8_t vram[1024 * 8];
-	uint8_t display[160 * 144];
 	
-	uint8_t LCDC;
-
-
 
 	string address = " ";
 
-	
 	
 	void NOP() {
 		cout << "NOP\n";
@@ -137,7 +121,6 @@ private:
 	int get_addr(uint8_t len);
 	
 
-	//still written in old way, should be changed;
 	void JP(FLAG f);
 	void JR(FLAG f);
 
@@ -174,7 +157,6 @@ private:
 	void ADD16(uint16_t& dst, uint16_t src);
 
 
-	//first instruction written in new convention
 	void ADD8(uint16_t src, char hilo);
 
 	void SUB(uint8_t reg);
@@ -191,14 +173,7 @@ private:
 
 
 
-
-
-
-
-
-
-
-	//CB PREFIXED
+	//CB PREFIXED FUNCTIONS
 	void SLA(uint16_t& reg, uint16_t half);
 	void RL(uint16_t& reg, char hilo);
 	void RLC(uint16_t& reg, char hilo);

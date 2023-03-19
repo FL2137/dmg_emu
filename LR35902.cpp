@@ -69,8 +69,6 @@ bool LR35902::check_flag(FLAG f) {
     return 0;
 }
 
-//but does this even work properly :?
-//corrected, probably works now. PRoblem was that it cleared of filled AF register while meant to only change one bit x d
 void LR35902::set_flag(FLAG f, int val) {
     if (f == FLAG::Z)
         if (val == 1)
@@ -107,7 +105,6 @@ void LR35902::print_flags() {
 
 }
 
-//handle with care
 uint8_t* LR35902::oam_scan() {
 
     int ly = get_bit(*stat, 2);
@@ -144,8 +141,6 @@ void LR35902::lookup() {
 
     case 0x00: NOP(); break;
 
-
-    // abominacja w chuj to jest
     case 0xCB: {
 
         opcode = ram[pc + 1];
@@ -187,13 +182,10 @@ void LR35902::lookup() {
     }
 
 
-
     case 0xC5: PUSH(BC); break;
     case 0xD5: PUSH(DE); break;
     case 0xE5: PUSH(HL); break;
     case 0xF5: PUSH(AF); break;
-
-
 
     case 0xE1: POP(HL); break;
 
@@ -210,9 +202,7 @@ void LR35902::lookup() {
 
 
 
-    case 0xC3: JP(FLAG::NONE); break; //VBLANK  (draw to screen);
-
-
+    case 0xC3: JP(FLAG::NONE); break; 
 
 
     case 0x20: JR(FLAG::NZ); break; 
@@ -388,10 +378,6 @@ void LR35902::cycle() {
         set_bit(*stat, 2); //stat.2 = true
     }
 
-
-    
-
-
     
     opcode = ram[pc];
     lookup();
@@ -399,7 +385,6 @@ void LR35902::cycle() {
 
 }
 
-//archaik
 int LR35902::get_addr(uint8_t len) {
     if (len == 1)
         return 0;
@@ -417,7 +402,6 @@ void get_reg(uint16_t reg, char lo_hi) {
 
 }
 
-//this function slayin
 void LR35902::set_reg(uint16_t& reg, char hilo, uint8_t val) {
     if (hilo == 'h') {
         reg &= 0x00FF;
@@ -431,9 +415,8 @@ void LR35902::set_reg(uint16_t& reg, char hilo, uint8_t val) {
         cout << "INCORRECT REGISTER\n";
 }
 
-//huh?
 void LR35902::DI() {
-    IME = false; //????XD
+    IME = false;
 
     cycle_timer = 4;
     pc++;
@@ -448,7 +431,6 @@ void LR35902::EI() {
 
 
 void LR35902::JP(FLAG f) {
-    //cout << "JP TO: " << show_hex(addr) << endl;
 
     if (f == FLAG::NONE) {
         pc = ((int)ram[pc + 2] << 8) | (int)ram[pc + 1];
@@ -497,11 +479,6 @@ void LR35902::JP(FLAG f) {
 }
 
 
-//should work
-//NIE DZIAŁA KURWA JAPIERDOLE JAKA ZJEBANA FUNKCJA
-//CHUJ WIE CZY TO JEST WINA TEGO, ŻE FUNKCJA NIE DZIAŁA TAK JAK NALEŻY, CZY TEN JEBANY BOOT ROM SRA POD SIEBIE
-
-//apparently, pc should be increased by s8 AND by 2 :l  
 void LR35902::JR(FLAG f) {
 
     auto unsigned_to_signed = [](uint8_t u) -> int8_t {
@@ -624,13 +601,12 @@ void LR35902::LD8(uint16_t& dst, char hilo, uint16_t* src, char hilo_src) {
     if (hilo_src == 'l')
         val = (*src & 0x00FF);
     else if (hilo_src == 'h')
-        val = (*src & 0xFF00) >> 8; // why was '*' here instead of '&'   :l
+        val = (*src & 0xFF00) >> 8; 
     set_reg(dst, hilo, val);
     pc++;
     cycle_timer = 4;
 }
 
-//everything works apparently :?
 void LR35902::LD16(uint16_t& reg, uint16_t* src) {
     if (src == nullptr) {
         uint16_t addr = (ram[pc + 1] | ram[pc + 2] << 8);
@@ -662,9 +638,9 @@ void LR35902::LD16(uint16_t& reg, uint16_t* src) {
 
 
 
-//try to find a better way to write this :/
+//TO REFACTOR
 // Ex and Fx instructions
-//UGHHHH in (C), A   or in every single if the amount of bytes pc is increased by is probably wrong in the opcode table :l
+// in (C), A   or in every single if the amount of bytes pc is increased by is probably wrong in the opcode table
 void LR35902::LDH(uint16_t reg, uint16_t src) {
     address = show_hex(pc);
     if (reg == 0xFFFF) {
@@ -707,9 +683,7 @@ void LR35902::LDH(uint16_t reg, uint16_t src) {
 
 }
 
-//cant deduct if decrementation/incrementation is supposed to happen
-//before reading/writing to memory locations ?? xD
-//this function handles only 4 opcodes and is made specifically for them, kinda bad programming here ;//
+//TO REFACTOR
 void LR35902::LD_MEM(uint16_t& reg, uint16_t src) {
     if (src == AF) {
         if (opcode == 0x22)
@@ -797,12 +771,9 @@ void LR35902::INC8(uint16_t& reg, char hilo) {
 }
 
 
-//How to check for carry?
-//is halfcarry check written properly? ;l
 
 
-//xD
-//nic tu chyba nie jest dobrze jeśli chodzi o flagi
+
 void LR35902::DEC8(uint16_t& reg, char hilo) {
 
     if (hilo == 0) {
@@ -826,8 +797,6 @@ void LR35902::DEC8(uint16_t& reg, char hilo) {
     }
 
 
-    //czemu to sie tutaj kurwa odbywa?
-    //mam wrażenie że nie przesuwa sie o 8 miejsc xd
     if (hilo == 'h')
         set_reg(reg, hilo, ((reg & 0xFF00) >> 8) - 1);
     else if (hilo == 'l')
@@ -837,8 +806,6 @@ void LR35902::DEC8(uint16_t& reg, char hilo) {
 
     if (hilo == 'h') {
         
-        //tak samo tutaj sie chyba tego kurwa nie robi
-        //według tego co jest napisane w "LD_MEM" niby jest git;
         if (((reg & 0xFF00)>>8) == 0)
             set_flag(FLAG::Z);
         else
@@ -911,8 +878,7 @@ void LR35902::ADD8(uint16_t src, char hilo) {
 void LR35902::SUB(uint8_t reg) {
 
     uint8_t A = (AF & 0xFF00) >> 8;
-       
-    //XDDDDDDDDDDDDDDDDDDDDD
+
     if (reg == -1) {
 
     }
@@ -979,11 +945,8 @@ void LR35902::SUB(uint8_t reg) {
 
 
 
-//xor most likely wurks (i bet 90%) chance, rest of the bitwise instructions are basically copies of
-//the xor one, thus thay might not work as supposed :ddd
 void LR35902::XOR(uint16_t reg, char hilo) {
     address = "XOR A";
-    //XOR clears entire AF : D
 
 
     uint16_t A = (AF & 0xFF00) >> 8;
@@ -1088,39 +1051,9 @@ void LR35902::ADC(uint8_t *src) {
 
     set_flag(FLAG::N, 0);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     cycle_timer = 4;
     pc++;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 void LR35902::PUSH(const uint16_t& reg) {
     stkp--;
@@ -1139,11 +1072,9 @@ void LR35902::POP(uint16_t& reg) {
 }
 
 
-//flags are probably set wrongly
 void LR35902::CP(uint16_t reg, char hilo = 0) {
     if (reg == 0x0000) {
         uint8_t d8 = ram[pc + 1];
-        //cout <<endl<<"D8:" << show_hex(d8) << endl;
         uint8_t A = (AF & 0xFF00) >> 8;
 
         if ((A - d8) == 0)
@@ -1187,7 +1118,6 @@ void LR35902::CP(uint16_t reg, char hilo = 0) {
 }
 
 
-
 void LR35902::SCF() {
     set_flag(FLAG::N, 0);
     set_flag(FLAG::H, 0);
@@ -1197,8 +1127,7 @@ void LR35902::SCF() {
 }
 
 
-//CB PREFIXED
-
+//CB PREFIXED FUNCTIONS START
 void LR35902::SLA(uint16_t& reg, uint16_t half) {
     if (reg == HL && half == 0xFFFF) {
         pc++;
@@ -1208,8 +1137,6 @@ void LR35902::SLA(uint16_t& reg, uint16_t half) {
     pc++;
     cycle_timer = 8;
 }
-
-
 
 void LR35902::RL(uint16_t& reg, char hilo) {
     if (hilo == '-') {
@@ -1267,9 +1194,6 @@ void LR35902::RLC(uint16_t& reg, char hilo) {
 
 }
 
-
-
-//this resets whole AF reg ;l
 void LR35902::RES(uint16_t& reg, char hilo, uint8_t bit) {
     if (hilo == 'l') 
         reg = reg & (0xFFFF ^ (1 << bit));
@@ -1293,8 +1217,6 @@ void LR35902::SET(uint16_t& reg, char hilo, uint8_t bit) {
 }
 
 void LR35902::BIT(uint8_t bit, uint16_t reg, uint16_t half) {
-    //not tested even once LOL
-    //tested once, worked*
     uint8_t R;
     uint8_t test = 1 << bit;
     if (half == 0xFF00)
@@ -1305,7 +1227,6 @@ void LR35902::BIT(uint8_t bit, uint16_t reg, uint16_t half) {
         R = ram[reg];
     }
     int result = (R & test) >> bit;
-    //cout<<"RESULT: "<<result<<endl;
     set_flag(FLAG::Z, !result);
     set_flag(FLAG::N, 0);
     set_flag(FLAG::H);
