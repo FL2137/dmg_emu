@@ -21,6 +21,8 @@ public:
 		result = "0x" + result;
 		return result;
 	}
+
+	
 	
 	LR35902 _cpu;
 	int startX = 50;
@@ -28,6 +30,10 @@ public:
 	int *check;
 	int ti[4][64];
 	
+	const int offset = 300;
+
+	olc::Pixel pixels[160][144] = { olc::WHITE };
+
 	char Macro = '-';
 	int steps = 0;
 	string Mode = "Debug";

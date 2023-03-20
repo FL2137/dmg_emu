@@ -63,7 +63,11 @@ bool Gameboy::OnUserCreate() {
 	};
 	Debugger();
 
-
+	for (int i = 0; i < 160; i++) {
+		for (int j = 0; j < 144; j++) {
+			pixels[i][j] = olc::WHITE;
+		}
+	}
 	
 
 	return true;
@@ -239,17 +243,118 @@ void Gameboy::drawSprite(uint8_t data[4]) {
 
 
 void Gameboy::RenderBackground() {
+
+	uint16_t tileRegion = 0;
+	uint16_t bgRegion = 0;
+	bool unsignedIndexing = true;
+
+	uint8_t scY = _cpu.ram[0xFF42];
+	uint8_t scX = _cpu.ram[0xFF43];
+	uint8_t wY = _cpu.ram[0xFF4A];
+	uint8_t wX = _cpu.ram[0xFF4B] - 7;
+
+	bool windowEnabled = false;
+
+
+	//cehck if window is enabled
+	if (_cpu.get_bit(*(_cpu.lcdc), 5) == 1) {
+		if (wY <= _cpu.ram[0xFF44])
+			windowEnabled = true;
+	}
+
+	//check for tile region
+	if (_cpu.get_bit(*(_cpu.lcdc), 4) == 1) {
+		tileRegion = 0x8000;
+	}
+	else {
+		tileRegion = 0x8800;
+		unsignedIndexing = false;
+	}
+
+	//check for background region
+
+	if (windowEnabled == false) {
+		if (_cpu.get_bit(*(_cpu.lcdc), 3) == 1) {
+			bgRegion = 0x9C00;
+		}
+		else {
+			bgRegion = 0x9800;
+		}
+	}
+	else {
+		if (_cpu.get_bit(*(_cpu.lcdc), 6)) {
+			bgRegion = 0x9C00;
+		}
+		else
+			bgRegion = 0x9800;
+	}
+
+
+
+
+	uint8_t y = 0;
+
+	if (!windowEnabled)
+		y = scY + _cpu.ram[0xFF44];
+	else
+		y = _cpu.ram[0xFF44] - wY;
+
+	uint16_t tileRow = (((uint8_t)(y / 8)) * 32); //calc current row of tiles
+
+	for (int pixel = 0; pixel < 160; pixel++) {
+
+		uint8_t x = pixel + scX;
+
+		if (windowEnabled) 
+			if (pixel >= wX) 
+				x = pixel - wX;
+
+
+		uint16_t tileCol = (x / 8);
+
+		int16_t tileIdx;
+
+		
+		uint16_t tileAddress = bgRegion + tileRow + tileCol;
+
+		if (unsignedIndexing) 
+			tileIdx = (uint8_t)(_cpu.ram[tileAddress]);
+		else
+			tileIdx = (int8_t)(_cpu.ram[tileAddress]);
+
+
+		uint16_t tileAdress = tileRegion;
+
+		if (unsignedIndexing)
+			tileAdress += tileIdx * 16;
+		else
+			tileAdress += (tileIdx+128) * 16;
+
+		uint8_t line = y % 8;
+		line *= 2;
+		uint8_t high_byte = _cpu.ram[tileIdx + line];
+		uint8_t low_byte = _cpu.ram[tileIdx + line + 1];
+
+		int color_bit = x % 8;
+		color_bit -= 7;
+		color_bit *= -1;
+	
+		pixels[_cpu.ram[0xFF44]][pixel] = olc::DARK_GREEN;
+		
+	}
+	_cpu.ram[0xFF44]++;
 }
 
 bool Gameboy::OnUserUpdate(float fElapsedTime) {
 	int c = 0;
 	
 	
-	Clear(olc::BLUE);
 	//DrawTile(MakeTile(check), 50, 50);
 	//DrawLogo();
 
+	Clear(olc::BLUE);
 	
+
 
 
 	
@@ -257,17 +362,19 @@ bool Gameboy::OnUserUpdate(float fElapsedTime) {
 	if (ready) {
 		_cpu.cycle();
 
+		cout << "LCDC.7: " << _cpu.get_bit(*(_cpu.lcdc), 7) << endl;
+
+
 		//LCD and PPU turned on
 		if (_cpu.get_bit(*(_cpu.lcdc), 7) == 1) {
-			sprites = _cpu.oam_scan();
 			
-
-
-
-
-
+			if (_cpu.get_bit(*(_cpu.lcdc), 0) == 1) {
+				cout << "should be renderin\n";
+				RenderBackground();
+			}
 		}
 		ready = false;
+
 	}
 	
 	if (Mode == "Debug") {
@@ -277,6 +384,7 @@ bool Gameboy::OnUserUpdate(float fElapsedTime) {
 				Debugger();
 			}
 			Macro = '-';
+			Debugger();
 		}
 		Debugger();
 	}
@@ -300,14 +408,13 @@ bool Gameboy::OnUserUpdate(float fElapsedTime) {
 		//ready = true;
 	}
 
-
 	//actual screen
-	for (int ly = 0; ly < 144; ly++) {
-		for (int lx = 0; lx < 160; lx++) {
-			Draw(olc::vi2d(ly+300, lx+300));
+	for (int ly = 0; ly < 160; ly++) {
+		for (int lx = 0; lx < 144; lx++) {
+			Draw(olc::vi2d(lx + 300, ly + 300), pixels[ly][lx]);
 		}
 	}
-
+	
 
 
 	return true;
