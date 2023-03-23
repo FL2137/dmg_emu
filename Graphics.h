@@ -22,8 +22,12 @@ public:
 		return result;
 	}
 
+	enum REG {
+		LCDC=1,
+		STAT=2,
+	};
 	
-	
+
 	LR35902 _cpu;
 	int startX = 50;
 	int startY = 50;
@@ -41,10 +45,14 @@ public:
 
 	uint8_t* sprites = nullptr;
 
+	void RenderTiles();
+
+	bool checkBit(REG r, int nbit);
+	int  checkBit(uint8_t obj, int nbit);
+
 
 	bool ready = false;
 
-	void DrawTile(int tile_data[64], int x, int y, int size);
 
 	void Debugger() {
 		string
@@ -72,8 +80,6 @@ public:
 		DrawString(olc::vi2d(10, 210), "Cycles passed: " + to_string(_cpu.cycles_done), olc::WHITE, 2);
 	}
 
-	void DrawLogo();
-	int *logo_data;
 
 	void MakeTile(int data[16], int (&tile)[64]) {
 		
@@ -92,7 +98,54 @@ public:
 
 
 	void RenderBackground();
+		
+	void tmp() {
 
+		uint16_t tileArea = 0x8000;
+		uint16_t backgroundTilemap = 0;
+
+		bool unsignedIndexing = true;
+		bool windowEnabled = false;
+
+		int ly = _cpu.ram[0xFF44];
+
+		uint8_t scY = _cpu.ram[0xFF42];
+		uint8_t scX = _cpu.ram[0xFF43];
+		uint8_t wY = _cpu.ram[0xFF4A];
+		uint8_t wX = _cpu.ram[0xFF4B] - 7;
+
+
+		if (checkBit(LCDC, 5) == 1 && wY <= ly)
+				windowEnabled = true;
+
+		if (checkBit(LCDC, 4) == 1) {
+			tileArea = 0x8000;
+		}
+		else {
+			tileArea = 0x8800;
+			unsignedIndexing = false;
+		}
+
+
+		if (windowEnabled == false) {
+			if (checkBit(LCDC, 3) == 1)
+				backgroundTilemap = 0x9C00;
+			else
+				backgroundTilemap = 0x9800;
+		}
+
+		uint8_t tileY = 0;
+
+
+		if (!windowEnabled)
+			tileY = scY + ly;
+		else
+			tileY = ly - wY;
+
+
+	}
+
+	void RenderSprites();
 
 
 	void MakeTile(int data[8], int(&tile)[32]) {

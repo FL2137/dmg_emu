@@ -55,12 +55,6 @@ void Gameboy::input() {
 bool Gameboy::OnUserCreate() {
 	
 	Clear(olc::BLUE);
-	
-	logo_data =new int[16*3] {
-		 0xCE, 0xED, 0x66, 0x66, 0xCC, 0x0D, 0x00, 0x0B, 0x03, 0x73, 0x00, 0x83, 0x00, 0x0C, 0x00, 0x0D,
-		 0x00, 0x08, 0x11, 0x1F, 0x88, 0x89, 0x00, 0x0E, 0xDC, 0xCC, 0x6E, 0xE6, 0xDD, 0xDD, 0xD9, 0x99,
-		 0xBB, 0xBB, 0x67, 0x63, 0x6E, 0x0E, 0xEC, 0xCC, 0xDD, 0xDC, 0x99, 0x9F, 0xBB, 0xB9, 0x33, 0x3E
-	};
 	Debugger();
 
 	for (int i = 0; i < 160; i++) {
@@ -73,175 +67,159 @@ bool Gameboy::OnUserCreate() {
 	return true;
 }
 
-void Gameboy::DrawLogo() {
 
-	int startX = 100, startY = 100;
-	int c = 0;
-
-	auto drawByte = [&](int byte) {
-		for (int i = 7; i >= 0; i--) {
-			if (i >= 4) {
-				if (((byte & (1 << i)) >> i) == 1)
-					FillRect(olc::vi2d(startX + 3 - i, startY), olc::vi2d(1, 2), olc::BLACK);
-				else
-					FillRect(olc::vi2d(startX + 3 - i, startY), olc::vi2d(1, 2), olc::WHITE);
-
-			}
-			else {
-				if (((byte & (1 << i)) >> i) == 1)
-					FillRect(olc::vi2d(startX - i - 1, startY + 1), olc::vi2d(1, 2), olc::BLACK);
-				else
-					FillRect(olc::vi2d(startX - i - 1, startY + 1), olc::vi2d(1, 2), olc::WHITE);
-
-			}
-		}
-	};
-
-	int flag = 0;
-	for (int i = 0; i < 48; i++) {
-		if (flag == 0) {
-			drawByte(logo_data[i]);
-			startY += 3;
-			flag++;
-		}
-		else if (flag == 1) {
-			drawByte(logo_data[i]);
-			startY -= 3;
-			startX += 4;
-			flag--;
-		}
-
-		if (i == 23) {
-			startX = 40;
-			startY += 6;
-			flag = 0;
-		}
-
+bool Gameboy::checkBit(REG r, int nbit) {
+	if (r == REG::LCDC) {
+		return _cpu.get_bit(*(_cpu.lcdc), nbit);
 	}
-	
-	/*for (int i = 24; i < 48; i++) {
-		if (flag == 0) {
-			drawByte(logo_data[i]);
-			startY += 3;
-			flag++;
-		}
-		else if (flag == 1) {
-			drawByte(logo_data[i]);
-			startY -= 3;
-			startX += 4;
-			flag--;
-		}
-
-	}*/
-
-
-	/*drawByte(logo_data[0]);
-	startY += 3;
-	drawByte(logo_data[1]);
-	startY -= 3;
-
-	startX += 4;
-
-	drawByte(logo_data[2]);
-	startY += 3;
-	drawByte(logo_data[3]);
-	startY -= 3;*/
-
-
-	/*for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 2; j++) {
-			drawByte(logo_data[c]);
-		}
-		c++;
-	}*/
-
-
-	/*int c = 0;
-	for (int i = 0; i < 48;i++) {
-		for (int j = 0; j < 2; j++) {
-
-			if (j == 0) 
-				for (int p = 7; p >= 0; p--) {
-
-					if (p >= 4) {
-						if(((logo_data[c] & (1 << p)) >> p) == 1 )
-							DrawRect(olc::vi2d(startX + 3 - p, startY), olc::vi2d(1, 2), olc::BLACK);
-						else if (((logo_data[c] & (1 << p)) >> p) == 0)
-							DrawRect(olc::vi2d(startX + 3 - p, startY), olc::vi2d(1, 2), olc::WHITE);
-					}
-					else {
-						if (((logo_data[c] & (1 << p)) >> p) == 1)
-							DrawRect(olc::vi2d(startX + 3 - p, startY+3), olc::vi2d(1, 2), olc::BLACK);
-						else if (((logo_data[c] & (1 << p)) >> p) == 0)
-							DrawRect(olc::vi2d(startX + 3 - p, startY+3), olc::vi2d(1, 2), olc::WHITE);
-					}
-
-
-				}
-			else
-				for (int p = 7; p >= 0; p--) {
-
-					if (p >= 4) {
-						if (((logo_data[c] & (1 << p)) >> p) == 1)
-							DrawRect(olc::vi2d(startX + 3 - p, startY+3), olc::vi2d(1, 2), olc::BLACK);
-						else if (((logo_data[c] & (1 << p)) >> p) == 0)
-							DrawRect(olc::vi2d(startX + 3 - p, startY+3), olc::vi2d(1, 2), olc::WHITE);
-					}
-					else {
-						if (((logo_data[c] & (1 << p)) >> p) == 1)
-							DrawRect(olc::vi2d(startX + 3 - p, startY + 6), olc::vi2d(1, 2), olc::BLACK);
-						else if (((logo_data[c] & (1 << p)) >> p) == 0)
-							DrawRect(olc::vi2d(startX + 3 - p, startY + 6), olc::vi2d(1, 2), olc::WHITE);
-					}
-
-
-				}
-
-
-
-			c++;
-		}
-		startX += 2;
-		if (i==23) {
-			startY += 9;
-			startX = 40;
-		}
-	}*/
 }
 
-void Gameboy::DrawTile(int tile_data[64], int x, int y, int size) {
-	int idx = 0;
-	for (int i = 0; i < size; i++) {
-		for (int j = 0; j < size; j++) {
-			if (tile_data[idx] == 00) 
-				FillRect(olc::vi2d(x + j, y + i), olc::vi2d(1, 1), olc::BLACK);
-			else if (tile_data[idx] == 11)
-				FillRect(olc::vi2d(x + j, y + i), olc::vi2d(1, 1), olc::WHITE);
-			else if (tile_data[idx] == 01)
-				FillRect(olc::vi2d(x + j, y + i), olc::vi2d(1, 1), olc::DARK_GREEN);
-			else if (tile_data[idx] == 10)
-				FillRect(olc::vi2d(x + j, y + i), olc::vi2d(1, 1), olc::GREEN);
-			idx++;
-		}
+
+int Gameboy::checkBit(uint8_t obj, int nbit) {
+	return (obj & (1 << nbit)) >> nbit;
+}
+
+#define WORD uint16_t
+#define SIGNED_WORD int16_t 
+#define BYTE uint8_t
+#define SIGNED_BYTE int8_t
+
+void Gameboy::RenderTiles()
+{
+	WORD tileData = 0;
+	WORD backgroundMemory = 0;
+	bool unsig = true;
+
+	// where to draw the visual area and the window
+	BYTE scrollY = _cpu.ram[0xFF42];
+	BYTE scrollX = _cpu.ram[0xFF43];
+	BYTE windowY = _cpu.ram[0xFF4A];
+	BYTE windowX = _cpu.ram[0xFF4B] - 7;
+
+	bool usingWindow = false;
+
+	// is the window enabled?
+	if (checkBit(LCDC, 5))
+	{
+		// is the current scanline we're drawing
+		// within the windows Y pos?,
+		if (windowY <=_cpu.ram[0xFF44])
+			usingWindow = true;
 	}
-	//cout << idx << endl;
+
+	// which tile data are we using?
+	if (checkBit(LCDC, 4))
+	{
+		tileData = 0x8000;
+	}
+	else
+	{
+		// IMPORTANT: This memory region uses signed
+		// bytes as tile identifiers
+		tileData = 0x8800;
+		unsig = false;
+	}
+
+	// which background mem?
+	if (false == usingWindow)
+	{
+		if (checkBit(LCDC, 3))
+			backgroundMemory = 0x9C00;
+		else
+			backgroundMemory = 0x9800;
+	}
+	else
+	{
+		// which window memory?
+		if (checkBit(LCDC, 6))
+			backgroundMemory = 0x9C00;
+		else
+			backgroundMemory = 0x9800;
+	}
+
+	BYTE yPos = 0;
+
+	// yPos is used to calculate which of 32 vertical tiles the
+	// current scanline is drawing
+	if (!usingWindow)
+		yPos = scrollY +_cpu.ram[0xFF44];
+	else
+		yPos = _cpu.ram[0xFF44] - windowY;
+
+	// which of the 8 vertical pixels of the current
+	// tile is the scanline on?
+	WORD tileRow = (((BYTE)(yPos / 8)) * 32);
+
+	// time to start drawing the 160 horizontal pixels
+	// for this scanline
+	for (int pixel = 0; pixel < 160; pixel++)
+	{
+		BYTE xPos = pixel + scrollX;
+
+		// translate the current x pos to window space if necessary
+		if (usingWindow)
+		{
+			if (pixel >= windowX)
+			{
+				xPos = pixel - windowX;
+			}
+		}
+
+		// which of the 32 horizontal tiles does this xPos fall within?
+		WORD tileCol = (xPos / 8);
+		SIGNED_WORD tileNum;
+
+		// get the tile identity number. Remember it can be signed
+		// or unsigned
+		WORD tileAddrss = backgroundMemory + tileRow + tileCol;
+		if (unsig)
+			tileNum = (BYTE)_cpu.ram[tileAddrss];
+		else
+			tileNum = (SIGNED_BYTE)_cpu.ram[tileAddrss];
+
+		// deduce where this tile identifier is in memory. Remember i
+		// shown this algorithm earlier
+		WORD tileLocation = tileData;
+
+		if (unsig)
+			tileLocation += (tileNum * 16);
+		else
+			tileLocation += ((tileNum + 128) * 16);
+
+		// find the correct vertical line we're on of the
+		// tile to get the tile data
+		//from in memory
+		BYTE line = yPos % 8;
+		line *= 2; // each vertical line takes up two bytes of memory
+		BYTE data1 = _cpu.ram[tileLocation + line];
+		BYTE data2 = _cpu.ram[tileLocation + line + 1];
+
+		// pixel 0 in the tile is it 7 of data 1 and data2.
+		// Pixel 1 is bit 6 etc..
+		int colourBit = xPos % 8;
+		colourBit -= 7;
+		colourBit *= -1;
+
+		// combine data 2 and data 1 to get the colour id for this pixel
+		// in the tile
+		int color = checkBit(data2, colourBit);
+		color <<= 1;
+		color |= checkBit(data1, colourBit);
+
+		cout << "COLOR VAL: " << color << endl;
+
+
+		if (color == 00)
+			pixels[_cpu.ram[0xFF44]][pixel] = olc::Pixel(0, 0, 0, 0);
+		else if (color == 01)
+			pixels[_cpu.ram[0xFF44]][pixel] = olc::DARK_GREEN;
+		else if (color == 10)
+			pixels[_cpu.ram[0xFF44]][pixel] = olc::GREEN;
+		else if (color == 11)
+			pixels[_cpu.ram[0xFF44]][pixel] = olc::WHITE;
+		
+	}
 }
-
-void readTileData(int address) {
-
-}
-
-void Gameboy::drawSprite(uint8_t data[4]) {
-	int y = data[0];
-	int x = data[1];
-	int index = data[2];
-	uint8_t tile[16];
-
-
-	//_cpu.
-}
-
-
 void Gameboy::RenderBackground() {
 
 	uint16_t tileRegion = 0;
@@ -335,14 +313,97 @@ void Gameboy::RenderBackground() {
 		uint8_t high_byte = _cpu.ram[tileIdx + line];
 		uint8_t low_byte = _cpu.ram[tileIdx + line + 1];
 
-		int color_bit = x % 8;
-		color_bit -= 7;
-		color_bit *= -1;
-	
-		pixels[_cpu.ram[0xFF44]][pixel] = olc::DARK_GREEN;
+		int colorBit = x % 8;
+		colorBit -= 7;
+		colorBit *= -1;
+
+		int color = checkBit(low_byte, colorBit);
+		color += checkBit(high_byte, colorBit)*10;
+		if(color != 0)
+		cout << "COLOR VAL: " << color << endl;
+
+		
+		if (color == 00)
+			pixels[_cpu.ram[0xFF44]][pixel] = olc::Pixel(0, 0, 0, 0);
+		else if (color == 01)
+			pixels[_cpu.ram[0xFF44]][pixel] = olc::DARK_GREEN;
+		else if (color == 10)
+			pixels[_cpu.ram[0xFF44]][pixel] = olc::GREEN;
+		else if (color == 11)
+			pixels[_cpu.ram[0xFF44]][pixel] = olc::WHITE;
+		
 		
 	}
-	_cpu.ram[0xFF44]++;
+}
+
+
+void Gameboy::RenderSprites() {
+
+	bool doubleTiles = false;
+
+	if (checkBit(LCDC, 2) == 1)
+		doubleTiles = true;
+
+	for (int sprite = 0; sprite < 40; sprite++) {
+
+		uint8_t index = sprite * 4;
+		uint8_t y = _cpu.ram[0xFE00 + index] - 16;
+		uint8_t x = _cpu.ram[0xFE00 + index + 1] - 8;
+		uint8_t tileLocation = _cpu.ram[0xFE00 + index + 2];
+		uint8_t attribs = _cpu.ram[0xFE00 + index + 3];
+
+		bool xFlip = _cpu.get_bit(attribs, 5);
+		bool yFlip = _cpu.get_bit(attribs, 6);
+
+		int ly = _cpu.ram[0xFF44];
+		/*cout << endl;
+		cout << "ly: " << ly << endl;
+		cout << "sY:" << y << endl;
+		cout << endl;*/
+
+
+		int ySize = 8;
+
+		if (doubleTiles) ySize = 16;
+	
+		// check if sprite intercepts current scanline (ly)
+		if ((ly >= y) && (ly < (y + ySize))) {
+
+			int line = ly - y; //line of current sprite   
+
+			if (yFlip); //TBI
+
+			uint16_t tileAddress = (0x8000 + (tileLocation * 16)) + line;
+			uint8_t high_byte = _cpu.ram[tileAddress];
+			uint8_t low_byte = _cpu.ram[tileAddress+1];
+
+			for (int bit = 7; bit >= 0; bit--) {
+				int color = checkBit(high_byte, bit) + (checkBit(low_byte, bit) * 10);
+
+
+
+				int xPix = 0 - bit;
+				xPix += 7;
+
+				int pixelPos = x + xPix;
+
+				//cout << "COLOR: " << color << endl;
+
+				if (color == 00)
+					pixels[pixelPos][ly] = olc::Pixel(0, 0, 0, 0);
+				else if (color == 01)
+					pixels[pixelPos][ly] = olc::DARK_GREEN;
+				else if (color == 10)
+					pixels[pixelPos][ly] = olc::GREEN;
+				else if (color == 11)
+					pixels[pixelPos][ly] = olc::WHITE;
+
+			}
+
+		}
+	}
+
+
 }
 
 bool Gameboy::OnUserUpdate(float fElapsedTime) {
@@ -362,16 +423,32 @@ bool Gameboy::OnUserUpdate(float fElapsedTime) {
 	if (ready) {
 		_cpu.cycle();
 
-		cout << "LCDC.7: " << _cpu.get_bit(*(_cpu.lcdc), 7) << endl;
-
-
+		//cout << "LCDC.7: " << _cpu.get_bit(*(_cpu.lcdc), 7) << endl;
+	
 		//LCD and PPU turned on
-		if (_cpu.get_bit(*(_cpu.lcdc), 7) == 1) {
+		if (checkBit(LCDC,7) == 1) {
 			
-			if (_cpu.get_bit(*(_cpu.lcdc), 0) == 1) {
-				cout << "should be renderin\n";
-				RenderBackground();
+
+			if (_cpu.ram[0xFF44] < 144) {
+				if (checkBit(LCDC, 0) == 1) {
+					RenderBackground();
+					//RenderTiles();
+				}
+				//cout << "LCDC.7=1" << endl;
+				if (checkBit(LCDC, 0) == 1) {
+					//cout << "LCDC.1=1" << endl;
+					RenderSprites();
+				}
+				_cpu.ram[0xFF44]++;
 			}
+			else { //VBLANK
+				_cpu.ram[0xFF44]++;
+				if (_cpu.ram[0xFF44] > 153)
+					_cpu.ram[0xFF44] = 0;
+			}
+
+
+
 		}
 		ready = false;
 

@@ -127,7 +127,7 @@ int main() {
 	Gameboy gb(cpu);
 
 	//cpu.load_rom("Testers/LD8.gb", "INIT");
-	string rom = "tetris.gb";
+	string rom = "Testers/LD8.gb";
 	//cout << "Podaj rom\n";
 	//cin >> rom;
 	cpu.load_rom(rom.c_str(), "INIT");

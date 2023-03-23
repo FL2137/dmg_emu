@@ -34,10 +34,9 @@ void LR35902::load_rom(const char* filename, string mbc) {
         rom.seekg(0, ios::beg);
         rom.read(buffer, size);
         rom.close();
-        cout <<"ROM SIZE:" << size << endl;
-        
-        if (mbc == "INIT") 
-            size = 0x7FFF;
+        cout <<"ROM SIZE:" << show_hex(size) << endl;
+        //if (mbc == "INIT") 
+          //  size = 0xFFFF;
         for (long i = 0; i <= size; i++) {
             ram[i] = buffer[i];
         }
@@ -47,7 +46,7 @@ void LR35902::load_rom(const char* filename, string mbc) {
     else
         cout << "CANT LOAD ROM\n";
     
-    load_bootrom();
+    //load_bootrom();
 
 }
 
@@ -667,12 +666,12 @@ void LR35902::LDH(uint16_t reg, uint16_t src) {
         cycle_timer = 12;
     }
     else if (src == 0xFF) {
-        cout << "ff00 + " + show_hex(ram[pc + 1]) << endl;
-        cout << show_hex(ram[0xff00+ram[pc + 1]]) << endl;
+        //cout << "ff00 + " + show_hex(ram[pc + 1]) << endl;
+       // cout << show_hex(ram[0xff00+ram[pc + 1]]) << endl;
         //cout << endl << "LDH ADDR: " << show_hex(ram[0xffff]) << endl;
-        cout << "before: " << show_hex(AF) << endl;
-        set_reg(AF, 'h', ram[0xFF00 + ram[pc + 1]]);
-        cout << "after: " << show_hex(AF) << endl;
+        //cout << "before: " << show_hex(AF) << endl;
+        //set_reg(AF, 'h', ram[0xFF00 + ram[pc + 1]]);
+        //cout << "after: " << show_hex(AF) << endl;
 
         pc += 2;
         cycle_timer = 12;
