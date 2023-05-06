@@ -415,9 +415,6 @@ bool Gameboy::OnUserUpdate(float fElapsedTime) {
 
 	Clear(olc::BLUE);
 	
-
-
-
 	
 	input();
 	if (ready) {

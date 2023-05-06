@@ -128,6 +128,11 @@ uint8_t* LR35902::get_tile(int index) {
     return tile;
 }
 
+void LR35902::DMA() {
+    uint16_t address = ram[0xFF46] << 8;
+    for (int i = 0; i < 0xA0; i++) 
+        ram[0xFE00 + i] = ram[address + i];
+}
 
 LR35902::LR35902() {}
 
@@ -370,6 +375,61 @@ void LR35902::lookup() {
 }
 
 
+void LR35902::interrupts() {
+
+    //check if interrupts are enabled
+    if (IME) {
+        
+        //check for every interrupt in priority order
+
+        //vblank
+        if (((IE & IF) & 1) == 1) {
+            IME = false;
+            set_bit(IF, 1, 0);
+            PUSH(pc);
+            pc = 0x40;
+            return;
+        }
+        
+        //LCD STAT
+        if (((IE & IF) & 1) == 1) {
+            IME = false;
+            set_bit(IF, 1, 0);
+            PUSH(pc);
+            pc = 0x48;
+            return;
+        }
+
+        //timer
+        if (((IE & IF) & 1) == 1) {
+            IME = false;
+            set_bit(IF, 1, 0);
+            PUSH(pc);
+            pc = 0x50;
+            return;
+        }
+
+        //serial (never rly gonna happen)
+        if (((IE & IF) & 1) == 1) {
+            IME = false;
+            set_bit(IF, 1, 0);
+            PUSH(pc);
+            pc = 0x58;
+            return;
+        }
+
+        //joypad
+        if (((IE & IF) & 1) == 1) {
+            IME = false;
+            set_bit(IF, 1, 0);
+            PUSH(pc);
+            pc = 0x60;
+            return;
+        }
+    }
+}
+
+
 void LR35902::cycle() {
     
     
@@ -377,7 +437,7 @@ void LR35902::cycle() {
         set_bit(*stat, 2); //stat.2 = true
     }
     
-    if (get_bit(*lcdc, 7) == 1) {
+    if (get_bit(*lcdc, 7) == 1) { // idk what this is
 
     }
 
@@ -385,6 +445,16 @@ void LR35902::cycle() {
     
     opcode = ram[pc];
     lookup();
+
+    //checking if DMA register was written to, and if it was, launching DMA
+    if (DMA_check != ram[0xFF46]) { 
+        DMA_check = ram[0xFF46];
+        DMA();
+    }
+
+
+    interrupts();
+
     cycles_done++;
 
 }
@@ -574,6 +644,14 @@ void LR35902::RET(FLAG f) {
 
     pc++;
     cycle_timer = 2;
+}
+
+
+void LR35902::RETI() {
+    pc = (ram[stkp] | ram[stkp + 1] << 8);
+    stkp += 2;
+    cycle_timer = 8;
+    IME = true;
 }
 
 

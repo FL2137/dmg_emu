@@ -26,11 +26,10 @@ public:
 		C = 7,
 		NC = 8,
 	};
-
-
+#define IE ram[0xFFFF]
+#define IF ram[0xFF0F]
 
 	bool IME;
-	bool IE;
 
 	int dot_count;
 
@@ -52,16 +51,24 @@ public:
 
 	uint8_t* ram;
 
+	uint8_t DMA_check;	
+
+	void DMA();
 
 	int get_bit(uint8_t obj, int nbit) {
 		return (obj & (1 << nbit)) >> nbit;
 	}
 
-	void set_bit(uint8_t& obj, int nbit) {
+	void set_bit(uint8_t& obj, int nbit, int val = 1) {
 		if (nbit >= 8 || nbit < 0)
 			throw out_of_range("nbit out of range");
 
-		obj = (obj | (1 << nbit));
+		if (val == 1)
+			obj = (obj | (1 << nbit));
+		else if (val == 0)
+			obj &= ~(1 << nbit);
+		else
+			throw out_of_range("wrong value of val");
 	}
 
 
@@ -71,6 +78,10 @@ public:
 	
 	void set_reg(uint16_t& reg, char hilo, uint8_t val);
 
+
+	void exec_interrupt(int interrupt);
+
+	void interrupts();
 
 	void dummy_init() {
 		ram = new uint8_t[0xFFFF+1]{0};
@@ -163,6 +174,7 @@ private:
 
 	void CALL(FLAG f);
 	void RET(FLAG f);
+	void RETI();	
 		
 	
 	void HALT();
