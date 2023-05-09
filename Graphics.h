@@ -22,10 +22,6 @@ public:
 		return result;
 	}
 
-	enum REG {
-		LCDC=1,
-		STAT=2,
-	};
 	
 
 	LR35902 _cpu;
@@ -41,18 +37,15 @@ public:
 	char Macro = '-';
 	int steps = 0;
 	string Mode = "Debug";
+	string sbreakPoint = "";
+	int dbreakPoint = -1;
 
-
-	uint8_t* sprites = nullptr;
 
 	void RenderTiles();
-
-	bool checkBit(REG r, int nbit);
+	 
 	int  checkBit(uint8_t obj, int nbit);
 
-
 	bool ready = false;
-
 
 	void Debugger() {
 		string
@@ -62,8 +55,8 @@ public:
 			HL = "HL:" + show_hex(_cpu.HL),
 			SP = "SP:" + show_hex(_cpu.stkp),
 			PC = "PC:" + show_hex(_cpu.pc),
-			lcdc = "lcdc:"+show_hex(*_cpu.lcdc),
-			stat = "stat:" + show_hex(*_cpu.stat);
+			lcdc = "lcdc:"+show_hex(_cpu.LCDC),
+			stat = "stat:" + show_hex(_cpu.STAT);
 
 		DrawString(olc::vi2d(10, 10), AF,olc::WHITE,2);
 		DrawString(olc::vi2d(10, 30), BC, olc::WHITE, 2);
@@ -78,23 +71,14 @@ public:
 		auto op = _cpu.ram[_cpu.pc];
 		DrawString(olc::vi2d(10, 190), "Opcode:" + show_hex(op), olc::WHITE, 2);
 		DrawString(olc::vi2d(10, 210), "Cycles passed: " + to_string(_cpu.cycles_done), olc::WHITE, 2);
+		DrawString(olc::vi2d(200, 10), "Breakpoint: " + sbreakPoint, olc::WHITE, 2);
+	
+	
+		DrawString(olc::vi2d(200, 30), "LY: " + to_string(_cpu.ram[0xFF44]), olc::WHITE, 2);
+	
 	}
 
 
-	void MakeTile(int data[16], int (&tile)[64]) {
-		
-		int count = 0;
-		for (int t = 0; t < 16; t += 2) {
-			for (int i = 7; i >= 0; i--) {
-				int i1 = (data[t] & (1 << i)) >> i;
-				int i2 = ((data[t+1] & (1 << i)) >> i)*10;
-				int pixel = i1 + i2;
-				tile[count] = pixel;
-				count++;
-			}
-		}
-		//cout << count << endl;
-	}
 
 
 	void RenderBackground();
@@ -115,10 +99,10 @@ public:
 		uint8_t wX = _cpu.ram[0xFF4B] - 7;
 
 
-		if (checkBit(LCDC, 5) == 1 && wY <= ly)
+		if (checkBit(_cpu.LCDC, 5) == 1 && wY <= ly)
 				windowEnabled = true;
 
-		if (checkBit(LCDC, 4) == 1) {
+		if (checkBit(_cpu.LCDC, 4) == 1) {
 			tileArea = 0x8000;
 		}
 		else {
@@ -128,7 +112,7 @@ public:
 
 
 		if (windowEnabled == false) {
-			if (checkBit(LCDC, 3) == 1)
+			if (checkBit(_cpu.LCDC, 3) == 1)
 				backgroundTilemap = 0x9C00;
 			else
 				backgroundTilemap = 0x9800;
@@ -147,30 +131,12 @@ public:
 
 	void RenderSprites();
 
-
-	void MakeTile(int data[8], int(&tile)[32]) {
-		int count = 0;
-		for (int t = 0; t < 8; t += 2) {
-			for (int i = 7; i >= 0; i--) {
-				int i1 = (data[t] & (1 << i)) >> i;
-				int i2 = ((data[t + 1] & (1 << i)) >> i) * 10;
-				int pixel = i1 + i2;
-				tile[count] = pixel;
-				count++;
-			}
-		}
-		cout << count << endl;
-	}
-
-	void drw(int data[16], int x, int y);
-
 	void input();
-
-	void drawSprite(uint8_t data[4]);
 
 	Gameboy(const LR35902 &cpu):_cpu(cpu) {
 		sAppName = "DMG01";
 	}
+
 public:
 	bool OnUserCreate() override;
 	bool OnUserUpdate(float fElapsedTime) override;

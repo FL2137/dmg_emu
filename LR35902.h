@@ -26,6 +26,7 @@ public:
 		C = 7,
 		NC = 8,
 	};
+
 #define IE ram[0xFFFF]
 #define IF ram[0xFF0F]
 
@@ -42,8 +43,9 @@ public:
 
 	uint8_t* get_tile(int index);
 
-	uint8_t* stat;
-	uint8_t* lcdc;
+
+#define LCDC ram[0xFF40]
+#define STAT ram[0xFF41]
 
 	
 	uint16_t stkp = 0xFFFE;
@@ -54,6 +56,13 @@ public:
 	uint8_t DMA_check;	
 
 	void DMA();
+
+	void set_lcd();
+	void LCD(int cycles);
+
+	bool draw_flag = false;
+	int scan_cycles = 0;
+
 
 	int get_bit(uint8_t obj, int nbit) {
 		return (obj & (1 << nbit)) >> nbit;
@@ -88,11 +97,6 @@ public:
 		for (int i = 0; i <= 0xFFFF; i++)
 			ram[i] = 0x00;
 
-		stat = &ram[0xFF41];
-		lcdc = &ram[0xFF40];
-
-		*lcdc = 0x00;
-		*stat = 0x00;
 
 		AF = 0x01B0;
 		BC = 0x0013;
@@ -125,6 +129,7 @@ public:
 		ram[0xFF25] = 0xF3;
 		ram[0xFF26] = 0xF1;
 		ram[0xFF40] = 0x91;
+		ram[0xFF41] = 0x85;
 		ram[0xFF42] = 0x00;
 		ram[0xFF43] = 0x00;
 		ram[0xFF45] = 0x00;
@@ -134,9 +139,6 @@ public:
 		ram[0xFF4A] = 0x00;
 		ram[0xFF4B] = 0x00;
 		ram[0xFFFF] = 0x00;
-
-
-
 
 	}
 	void cycle();

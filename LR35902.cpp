@@ -27,7 +27,6 @@ void LR35902::load_bootrom() {
 
 void LR35902::load_rom(const char* filename, string mbc) {
     ifstream rom(filename, ios::binary | ios::ate);
-
     if (rom.is_open()) {
         streamsize size = rom.tellg();
         char* buffer = new char[size];
@@ -35,8 +34,10 @@ void LR35902::load_rom(const char* filename, string mbc) {
         rom.read(buffer, size);
         rom.close();
         cout <<"ROM SIZE:" << show_hex(size) << endl;
+
         //if (mbc == "INIT") 
           //  size = 0xFFFF;
+
         for (long i = 0; i <= size; i++) {
             ram[i] = buffer[i];
         }
@@ -106,8 +107,7 @@ void LR35902::print_flags() {
 
 uint8_t* LR35902::oam_scan() {
 
-    int ly = get_bit(*stat, 2);
-
+    int ly = get_bit(STAT, 2);
 
     uint8_t* sprites = new uint8_t[160];
     int j = 0;
@@ -132,6 +132,107 @@ void LR35902::DMA() {
     uint16_t address = ram[0xFF46] << 8;
     for (int i = 0; i < 0xA0; i++) 
         ram[0xFE00 + i] = ram[address + i];
+}
+
+void LR35902::LCD(int cycles) {
+    set_lcd();
+
+    //if LCD is enabled
+    if (get_bit(LCDC, 7)) 
+        scan_cycles -= cycles;
+    else 
+        return;
+
+
+    if (scan_cycles <= 0) {
+        uint8_t ly = ++ram[0xFF44];
+        scan_cycles = 456;
+
+        //entering VBlank, requesting interrupt
+        if (ly == 144) {
+            set_bit(IF, 0);
+            draw_flag = false;
+        }
+
+        //reset scanline count
+        else if (ly > 153) {
+            ram[0xFF44] = 0;
+            draw_flag = false;
+        }
+
+        else if (ly < 144) {
+            draw_flag = true;
+        }
+    }
+}
+
+void LR35902::set_lcd() {
+    uint8_t status = ram[0xFF41];
+
+    if (get_bit(LCDC, 7) == 0) {
+
+        scan_cycles = 456;
+        ram[0xFF44] = 0;
+        status &= 252;
+        set_bit(status, 0);
+        ram[0xFF41] = status;
+        return;
+    }
+
+    uint8_t ly = ram[0xFF44];
+    uint8_t mode = status & 0x3;
+
+    uint8_t new_mode = 0;
+    bool request_interrupt = false;
+
+    //if in VBlank, mode is always 1
+    if (ly >= 144) {
+        new_mode = 1;
+        set_bit(status, 0);
+        set_bit(status, 1, 0);
+        request_interrupt = get_bit(status, 4);
+    }
+    else {
+        int mode2bounds = 456 - 80;
+        int mode3bounds = mode2bounds - 172;
+
+        //check for mode 2 
+        if (scan_cycles >= mode2bounds) {
+            new_mode = 2;
+            set_bit(status, 1);
+            set_bit(status, 0, 0);
+            request_interrupt = get_bit(status, 5);
+        }
+        //check for mode 3
+        else if (scan_cycles >= mode3bounds) {
+            new_mode = 3;
+            set_bit(status, 1);
+            set_bit(status, 0);
+        }
+        //check for mode 0
+        else {
+            new_mode = 0;
+            set_bit(status, 1, 0);
+            set_bit(status, 0, 0);
+            request_interrupt = get_bit(status, 3);
+        }
+    }
+
+    //request LCD interrupt
+    if (request_interrupt && (new_mode != mode)) 
+        set_bit(IF, 1);
+
+
+    if (ly == ram[0xFF45]) {
+        set_bit(status, 2);
+        if (get_bit(status, 6)) 
+            set_bit(IF, 1);
+    }
+    else {
+        set_bit(status, 2, 0);
+    }
+
+    ram[0xFF41] = status;
 }
 
 LR35902::LR35902() {}
@@ -384,28 +485,32 @@ void LR35902::interrupts() {
 
         //vblank
         if (((IE & IF) & 1) == 1) {
+            
             IME = false;
             set_bit(IF, 1, 0);
             PUSH(pc);
             pc = 0x40;
+            lookup();
             return;
         }
         
         //LCD STAT
-        if (((IE & IF) & 1) == 1) {
+        if ((((IE & IF) & 1) >> 1) == 1) {
             IME = false;
             set_bit(IF, 1, 0);
             PUSH(pc);
             pc = 0x48;
+            lookup();
             return;
         }
 
         //timer
-        if (((IE & IF) & 1) == 1) {
+        if ((((IE & IF) & 1) >> 2) == 1) {
             IME = false;
             set_bit(IF, 1, 0);
             PUSH(pc);
             pc = 0x50;
+            lookup();
             return;
         }
 
@@ -415,15 +520,17 @@ void LR35902::interrupts() {
             set_bit(IF, 1, 0);
             PUSH(pc);
             pc = 0x58;
+            lookup();
             return;
         }
 
         //joypad
-        if (((IE & IF) & 1) == 1) {
+        if ((((IE & IF) & 1) >> 3) == 1) {
             IME = false;
             set_bit(IF, 1, 0);
             PUSH(pc);
             pc = 0x60;
+            lookup();
             return;
         }
     }
@@ -434,14 +541,9 @@ void LR35902::cycle() {
     
     
     if (ram[0xFF44] == ram[0xFF45]) {  //if LY==LYC
-        set_bit(*stat, 2); //stat.2 = true
+        set_bit(STAT, 2); //stat.2 = true 
     }
     
-    if (get_bit(*lcdc, 7) == 1) { // idk what this is
-
-    }
-
-
     
     opcode = ram[pc];
     lookup();
@@ -452,6 +554,8 @@ void LR35902::cycle() {
         DMA();
     }
 
+    //LCD routine
+    LCD(cycle_timer);
 
     interrupts();
 
@@ -855,9 +959,6 @@ void LR35902::INC8(uint16_t& reg, char hilo) {
 }
 
 
-
-
-
 void LR35902::DEC8(uint16_t& reg, char hilo) {
 
     if (hilo == 0) {
@@ -967,8 +1068,6 @@ void LR35902::SUB(uint8_t reg) {
 
     }
 
-
-
     if (reg > A) {
         if (
             ((A & 16) >> 4) == 1 && (((A + reg) & 16) >> 4) == 0
@@ -1025,8 +1124,6 @@ void LR35902::SUB(uint8_t reg) {
     pc++;
     return;
 }
-
-
 
 
 void LR35902::XOR(uint16_t reg, char hilo) {
@@ -1105,13 +1202,6 @@ void LR35902::AND(uint16_t reg, uint16_t half) {
     if (half == 0xFFFF)
         cycle_timer = 8;
 }
-
-
-
-
-
-
-
 
 
 void LR35902::ADC(uint8_t *src) {
