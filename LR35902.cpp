@@ -808,7 +808,6 @@ void LR35902::LD8(uint16_t& dst, char hilo, uint16_t* src, char hilo_src) {
         return;
     }
 
-
     //default:
     uint8_t val = 0x00;
     if (hilo_src == 'l')
@@ -952,7 +951,7 @@ void LR35902::INC8(uint16_t& reg, char hilo) {
             set_flag(FLAG::Z);
         else
             set_flag(FLAG::Z, 0);
-        cycles = 4;
+        cycles = 12;
         return;
     }
 
@@ -981,7 +980,6 @@ void LR35902::INC8(uint16_t& reg, char hilo) {
     cycles = 4;
     pc++;
 }
-
 
 void LR35902::DEC8(uint16_t& reg, char hilo) {
 
@@ -1044,11 +1042,9 @@ void LR35902::DEC8(uint16_t& reg, char hilo) {
     pc++;
 }
 
-
 void LR35902::ADD16(uint16_t& dst, uint16_t src) {
 
 }
-
 
 void LR35902::ADD8(uint16_t src, char hilo) {
     
@@ -1079,7 +1075,6 @@ void LR35902::ADD8(uint16_t src, char hilo) {
     set_reg(AF, 'h', (uint8_t)(A + src));
 
 }
-
 
 void LR35902::ADC(uint16_t reg, char hilo) {
 
@@ -1139,8 +1134,6 @@ void LR35902::ADC(uint16_t reg, char hilo) {
     cycles = 4;
     return;
 }
-
-
 
 //not finished ( (HL) case not handled)
 void LR35902::SUB(uint8_t reg) {
@@ -1208,10 +1201,26 @@ void LR35902::SUB(uint8_t reg) {
     return;
 }
 
-
 void LR35902::XOR(uint16_t reg, char hilo) {
     address = "XOR A";
+    if (hilo == '-') {
+        uint8_t value = ram[HL];
+        uint8_t A = (AF & 0xFF00) >> 8;
+        A ^= value;
+        set_reg(AF, 'h', A);
+        if (A == 0)
+            set_flag(Z);
+        else
+            set_flag(Z, 0);
 
+        set_flag(FLAG::C, 0);
+        set_flag(FLAG::N, 0);
+        set_flag(FLAG::H, 0);
+
+        pc++;
+        cycles = 8;
+        return;
+    }
 
     uint16_t A = (AF & 0xFF00) >> 8;
     uint16_t R = 0x0000;
@@ -1236,8 +1245,7 @@ void LR35902::XOR(uint16_t reg, char hilo) {
 
     pc++;
     cycles = 4;
-    if (hilo == '-');
-        cycles = 8;
+    
 }
 
 void LR35902::OR(uint16_t reg, uint16_t half) {
@@ -1285,9 +1293,6 @@ void LR35902::AND(uint16_t reg, uint16_t half) {
     if (half == 0xFFFF)
         cycles = 8;
 }
-
-
-
 
 void LR35902::PUSH(const uint16_t& reg) {
     stkp--;
