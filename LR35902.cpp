@@ -247,6 +247,7 @@ void LR35902::lookup() {
 
     case 0x00: NOP(); break;
 
+    //prefixed instructions
     case 0xCB: {
 
         opcode = ram[pc + 1];
@@ -294,10 +295,16 @@ void LR35902::lookup() {
     case 0xF5: PUSH(AF); break;
 
     case 0xE1: POP(HL); break;
+    case 0xC1: POP(BC); break;
+
 
     case 0x76: HALT(); break;
 
     case 0xCD: CALL(FLAG::NONE); break;
+    case 0xCC: CALL(FLAG::Z); break;
+    case 0xDC: CALL(FLAG::C); break;
+    case 0xC4: CALL(FLAG::NZ); break;
+    case 0xD4: CALL(FLAG::NC); break;
 
     case 0xC9: RET(FLAG::NONE); break;
     case 0xC8: RET(FLAG::Z);    break;
@@ -306,18 +313,16 @@ void LR35902::lookup() {
     case 0xC0: RET(FLAG::NZ);   break;
     case 0xD0: RET(FLAG::NC);   break;
 
-
-
     case 0xC3: JP(FLAG::NONE); break; 
-
+    case 0xC2: JP(FLAG::NZ); break;
+    case 0xD2: JP(FLAG::NC); break;
+    case 0xCA: JP(FLAG::Z); break;
+    case 0xDA: JP(FLAG::C); break;
 
     case 0x20: JR(FLAG::NZ); break; 
     case 0x30: JR(FLAG::NC); break; 
-
-
     case 0x18: JR(FLAG::NONE); break;
     case 0x28: JR(FLAG::Z); break;
-
 
     case 0x17: RL(AF, 'h'); pc--; set_flag(Z, 0); break;//Xd
 
@@ -349,8 +354,6 @@ void LR35902::lookup() {
     case 0x4e: LD8(BC, 'l', &HL, '-'); break;
     case 0x4F: LD8(BC, 'l', &AF, 'h'); break;
 
-
-
     case 0x50: LD8(DE, 'h', &BC, 'h'); break;
     case 0x51: LD8(DE, 'h', &BC, 'l'); break;
     case 0x52: LD8(DE, 'h', &DE, 'h'); break;
@@ -369,7 +372,6 @@ void LR35902::lookup() {
     case 0x5e: LD8(DE, 'l', &HL, '-'); break;
     case 0x5f: LD8(DE, 'l', &AF, 'h'); break;
 
-
     case 0x60: LD8(HL, 'h', &BC, 'h'); break;
     case 0x61: LD8(HL, 'h', &BC, 'l'); break;
     case 0x62: LD8(HL, 'h', &DE, 'h'); break;
@@ -378,7 +380,6 @@ void LR35902::lookup() {
     case 0x65: LD8(HL, 'h', &HL, 'l'); break;
     case 0x66: LD8(HL, 'h', &HL, '-'); break;
     case 0x67: LD8(HL, 'h', &AF, 'h'); break;
-
 
     case 0x68: LD8(HL, 'l', &BC, 'h'); break;
     case 0x69: LD8(HL, 'l', &BC, 'l'); break;
@@ -391,7 +392,6 @@ void LR35902::lookup() {
 
 
     case 0x77: LD8(HL, '-', &AF, 'h'); break;
-
     case 0x78: LD8(AF, 'h', &BC, 'h'); break;
     case 0x79: LD8(AF, 'h', &BC, 'l'); break;
     case 0x7A: LD8(AF, 'h', &DE, 'h'); break;
@@ -410,8 +410,6 @@ void LR35902::lookup() {
     case 0xFA: LDH(0, 0xFFFF); break;
 
 
-
-
     case 0x02: LD_MEM(BC, AF); break;
     case 0x12: LD_MEM(DE, AF); break;
     case 0x22: LD_MEM(HL, AF); break;
@@ -419,7 +417,6 @@ void LR35902::lookup() {
     case 0x1A: LD_MEM(AF, DE); break;
     case 0x2A: LD_MEM(AF, AF); break;
     case 0x3A: LD_MEM(AF, HL); break;
-
 
 
     case 0x01: LD16(BC, nullptr); break;
@@ -447,19 +444,23 @@ void LR35902::lookup() {
     case 0x3D: DEC8(AF, 'h'); break;
 
 
-
     case 0x03: INC16(BC); break;
     case 0x13: INC16(DE); break;
     case 0x23: INC16(HL); break;
     case 0x33: INC16(stkp); break;
 
-
+    case 0x80: ADD8(BC, 'h'); break;
+    case 0x81: ADD8(BC, 'l'); break;
+    case 0x82: ADD8(DE, 'h'); break;
+    case 0x83: ADD8(HL, 'l'); break;
+    case 0x84: ADD8(HL, '-'); break;
+    case 0x85: ADD8(AF, 'h'); break;
+   
+    case 0xC6: ADD8(BC, 'h'); break;
+    
 
     case 0xF3: DI(); break;
     case 0xFB: EI(); break;
-
-    case 0x80: ADD8(BC, 'h'); break;
-
 
     case 0xFE: CP(0x0000, 0); break;
 
@@ -471,7 +472,6 @@ void LR35902::lookup() {
     case 0xAB: XOR(DE, 'l'); break;
     case 0xAF: XOR(AF, 'h'); break;
 
-    case 0xC1: POP(BC);
 
     }
 }
@@ -785,8 +785,6 @@ void LR35902::RETI() {
     IME = true;
 }
 
-
-
 //POSSIBLE PROBLEMS WHEN LOADING zeros into registers, such like  dst | 0x0000
 //TROUBLE LOADING ADDRESSES
 //OPIWFGNAWIGFWAOPAW
@@ -850,8 +848,6 @@ void LR35902::LD16(uint16_t& reg, uint16_t* src) {
         cycles = 8;
     }
 }
-
-
 
 //TO REFACTOR
 // Ex and Fx instructions
@@ -1056,18 +1052,16 @@ void LR35902::ADD16(uint16_t& dst, uint16_t src) {
 
 void LR35902::ADD8(uint16_t src, char hilo) {
     
-    uint8_t dst = (AF & 0xFF00) >> 8;
-
-    
+    uint8_t A = (AF & 0xFF00) >> 8;
 
     //checks for half-carry and sets/resets it
-    if (((dst & 0xF) + (src & 0xF)) == 0x10)
+    if (((A & 0xF) + (src & 0xF)) == 0x10)
         set_flag(FLAG::H);
     else
         set_flag(FLAG::H, 0);
 
     //checks if result==0, sets/resets Z flag
-    if ((uint8_t)dst+src == 0)
+    if ((uint8_t)(A + src) == 0)
         set_flag(FLAG::Z, 1);
     else
         set_flag(FLAG::Z, 0);
@@ -1076,15 +1070,76 @@ void LR35902::ADD8(uint16_t src, char hilo) {
     set_flag(FLAG::N, 0);
   
     //checks for carry, sets/resets flag
-    if ((uint16_t)(dst + src) == 0x100)
+    if ((uint16_t)(A + src) == 0x100)
         set_flag(FLAG::C);
     else
         set_flag(FLAG::C, 0);
 
     //sets accumulator to result;
-    set_reg(AF, 'h', (uint8_t)dst+src);
+    set_reg(AF, 'h', (uint8_t)(A + src));
 
 }
+
+
+void LR35902::ADC(uint16_t reg, char hilo) {
+
+    if (hilo == '-') {
+        uint8_t value = ram[HL] + check_flag(C);
+        set_flag(C, 0);
+        uint8_t A = AF >> 8;
+        if (A + value > 255)
+            set_flag(C, 1);
+
+        A += value;
+
+        if (((A & 0xF) + (reg & 0xF)) == 0x10)
+            set_flag(FLAG::H);
+        else
+            set_flag(FLAG::H, 0);
+
+        if (A == 0)
+            set_flag(Z, 1);
+        else
+            set_flag(Z, 0);
+
+        set_flag(N, 0);
+
+        set_reg(AF, 'h', A);
+
+        pc++;
+        cycles = 4;
+        return;
+    }
+
+    uint8_t value = hilo == 'l' ? reg & 0xFF : (reg & 0xFF00) >> 8;
+
+    value += check_flag(C);
+    set_flag(C, 0);
+    uint8_t A = AF >> 8;
+    if (A + value > 255)
+        set_flag(C, 1);
+
+    A += value;
+
+    if (((A & 0xF) + (reg & 0xF)) == 0x10)
+        set_flag(FLAG::H);
+    else
+        set_flag(FLAG::H, 0);
+
+    if (A == 0)
+        set_flag(Z, 1);
+    else
+        set_flag(Z, 0);
+
+    set_flag(N, 0);
+
+    set_reg(AF, 'h', A);
+
+    pc++;
+    cycles = 4;
+    return;
+}
+
 
 
 //not finished ( (HL) case not handled)
@@ -1232,30 +1287,7 @@ void LR35902::AND(uint16_t reg, uint16_t half) {
 }
 
 
-void LR35902::ADC(uint8_t *src) {
 
-
-    uint8_t A = (AF & 0xFF00) >> 8;
-
-
-    if (src == nullptr) {
-        A = A + check_flag(FLAG::C) + ram[HL];
-        set_reg(AF, 'h', A);
-
-
-
-        cycles = 4;
-        pc++;
-    }
-    
-    A =  A + check_flag(FLAG::C) + (*src);
-
-
-    set_flag(FLAG::N, 0);
-
-    cycles = 4;
-    pc++;
-}
 
 void LR35902::PUSH(const uint16_t& reg) {
     stkp--;
