@@ -145,7 +145,8 @@ void LR35902::LCD(int cycles) {
 
 
     if (scan_cycles <= 0) {
-        uint8_t ly = ++ram[0xFF44];
+        ram[0xFF44]++;
+        uint8_t ly = ram[0xFF44];
         scan_cycles = 456;
 
         //entering VBlank, requesting interrupt
@@ -555,11 +556,12 @@ void LR35902::cycle() {
     }
 
     //LCD routine
-    LCD(cycle_timer);
+    LCD(cycles);
 
     interrupts();
 
-    cycles_done++;
+    cycles_done += cycles;
+    cycles = 0;
 
 }
 
@@ -596,35 +598,34 @@ void LR35902::set_reg(uint16_t& reg, char hilo, uint8_t val) {
 void LR35902::DI() {
     IME = false;
 
-    cycle_timer = 4;
+    cycles = 4;
     pc++;
 }
 
 void LR35902::EI() {
     IME = true;
 
-    cycle_timer = 4;
+    cycles = 4;
     pc++;
 }
-
 
 void LR35902::JP(FLAG f) {
 
     if (f == FLAG::NONE) {
         pc = ((int)ram[pc + 2] << 8) | (int)ram[pc + 1];
-        cycle_timer = 4;
+        cycles = 16;
         return;
     }
     else if (f == FLAG::H) {
         pc = HL;
-        cycle_timer = 4;
+        cycles = 4;
         return;
     }
     else if (f == FLAG::NZ) {
         if (check_flag(FLAG::Z) == 0) {
             uint16_t addr = ((int)ram[pc + 2] << 8) | (int)ram[pc + 1];
             pc = addr;
-            cycle_timer = 4;
+            cycles = 16;
             return;
         }
     }
@@ -632,7 +633,7 @@ void LR35902::JP(FLAG f) {
         if (check_flag(FLAG::Z) == 1) {
             uint16_t addr = ((int)ram[pc + 2] << 8) | (int)ram[pc + 1];
             pc = addr;
-            cycle_timer = 4;
+            cycles = 16;
             return;
         }
     }
@@ -640,7 +641,7 @@ void LR35902::JP(FLAG f) {
         if (check_flag(FLAG::C) == 0) {
             uint16_t addr = ((int)ram[pc + 2] << 8) | (int)ram[pc + 1];
             pc = addr;
-            cycle_timer = 4;
+            cycles = 16;
             return;
         }
     }
@@ -648,14 +649,13 @@ void LR35902::JP(FLAG f) {
         if (check_flag(FLAG::C) == 1) {
             uint16_t addr = ((int)ram[pc + 2] << 8) | (int)ram[pc + 1];
             pc = addr;
-            cycle_timer = 4;
+            cycles = 16;
             return;
         }
     }
     pc++;
-    cycle_timer = 4;
+    cycles = 12;
 }
-
 
 void LR35902::JR(FLAG f) {
 
@@ -673,53 +673,80 @@ void LR35902::JR(FLAG f) {
         if (flag == false) {
             int8_t s8 = unsigned_to_signed(ram[pc + 1]);
             pc += s8 + 2;
-            cycle_timer = 12;
+            cycles = 12;
         }
         else {
             pc += 2;
-            cycle_timer = 8;
+            cycles = 8;
         }
     }
     else if (f == FLAG::NONE) {
         int8_t s8 = unsigned_to_signed(ram[pc + 1]);
         pc += s8 + 2;
-        cycle_timer = 12;
+        cycles = 12;
     }
     else {
         if (check_flag(f) == 1) {
             int8_t s8 = unsigned_to_signed(ram[pc + 1]);
             pc += s8 +2;
-            cycle_timer = 12;
+            cycles = 12;
         }
         else {
             pc += 2;
-            cycle_timer = 8;
+            cycles = 8;
         }
     }
 }
-
-
 
 void LR35902::HALT() {
     //set halt mode 
     //TBI
 }
 
-
 void LR35902::CALL(FLAG f) {
-    uint16_t hl = ((int)ram[pc + 2] << 8) | (int)ram[pc + 1];
-    uint8_t h = (int)ram[pc + 2] << 8;
-    uint8_t l = (int)ram[pc + 1];
-    cout << show_hex(hl) << endl;
-    //push pc+3 to stack;
-    //cout << "pc+3 \n" << show_hex(pc + 3) << endl;
-    //cout << (((pc + 3) & 0xFF00) >> 8) << endl;
-    //cout << show_hex((((pc+3) & 0x00FF))) <<endl;
-    ram[stkp - 1] = (((pc + 3) & 0xFF00) >> 8);
-    ram[stkp - 2] = (pc + 3) & 0x00FF;
-    stkp -= 2;
-    pc = hl;
-    cycle_timer = 12;
+
+    if (f == NZ && !check_flag(Z)) {
+        uint16_t hl = ((int)ram[pc + 2] << 8) | (int)ram[pc + 1];
+        ram[stkp - 1] = (((pc + 3) & 0xFF00) >> 8);
+        ram[stkp - 2] = (pc + 3) & 0x00FF;
+        stkp -= 2;
+        pc = hl;
+        cycles = 24;
+        return;
+    }
+    
+    if (f == NC && !check_flag(C)) {
+        uint16_t hl = ((int)ram[pc + 2] << 8) | (int)ram[pc + 1];
+        ram[stkp - 1] = (((pc + 3) & 0xFF00) >> 8);
+        ram[stkp - 2] = (pc + 3) & 0x00FF;
+        stkp -= 2;
+        pc = hl;
+        cycles = 24;
+        return;
+    }
+
+    if ((f == Z || f == C) && check_flag(f)) {
+        uint16_t hl = ((int)ram[pc + 2] << 8) | (int)ram[pc + 1];
+        ram[stkp - 1] = (((pc + 3) & 0xFF00) >> 8);
+        ram[stkp - 2] = (pc + 3) & 0x00FF;
+        stkp -= 2;
+        pc = hl;
+        cycles = 24;
+        return;
+    }
+
+    if (f == NONE) {
+        uint16_t hl = ((int)ram[pc + 2] << 8) | (int)ram[pc + 1];
+        ram[stkp - 1] = (((pc + 3) & 0xFF00) >> 8);
+        ram[stkp - 2] = (pc + 3) & 0x00FF;
+        stkp -= 2;
+        pc = hl;
+        cycles = 24;
+        return;
+    }
+
+    pc += 3;
+    cycles = 12;
 }
 
 
@@ -728,33 +755,33 @@ void LR35902::RET(FLAG f) {
         uint16_t newPC = (ram[stkp] | ram[stkp + 1] << 8);
         stkp += 2;
         pc = newPC;
-        cycle_timer = 4;
+        cycles = 4;
         return;
     }
     else if((f==FLAG::NZ || f==FLAG::NC) && check_flag(f) == false){
         uint16_t newPC = (ram[stkp] | ram[stkp + 1] << 8);
         stkp += 2;
         pc = newPC;
-        cycle_timer = 5;
+        cycles = 5;
         return;
     }
     else if ((f == FLAG::Z || f == FLAG::C) && check_flag(f) == true) {
         uint16_t newPC = (ram[stkp] | ram[stkp + 1] << 8);
         stkp += 2;
         pc = newPC;
-        cycle_timer = 5;
+        cycles = 5;
         return;
     }
 
     pc++;
-    cycle_timer = 2;
+    cycles = 2;
 }
 
 
 void LR35902::RETI() {
     pc = (ram[stkp] | ram[stkp + 1] << 8);
     stkp += 2;
-    cycle_timer = 8;
+    cycles = 16;
     IME = true;
 }
 
@@ -773,13 +800,13 @@ void LR35902::LD8(uint16_t& dst, char hilo, uint16_t* src, char hilo_src) {
             val = (*src & 0xFF00) >> 8;
         ram[HL] = val;
         pc++;
-        cycle_timer = 8;
+        cycles = 8;
         return;
     }
     if (src == nullptr) {
         set_reg(dst, hilo, ram[pc + 1]);
         pc += 2;
-        cycle_timer = 4;
+        cycles = 4;
         return;
     }
 
@@ -792,7 +819,7 @@ void LR35902::LD8(uint16_t& dst, char hilo, uint16_t* src, char hilo_src) {
         val = (*src & 0xFF00) >> 8; 
     set_reg(dst, hilo, val);
     pc++;
-    cycle_timer = 4;
+    cycles = 4;
 }
 
 void LR35902::LD16(uint16_t& reg, uint16_t* src) {
@@ -800,7 +827,7 @@ void LR35902::LD16(uint16_t& reg, uint16_t* src) {
         uint16_t addr = (ram[pc + 1] | ram[pc + 2] << 8);
         reg = addr;
         pc += 3;
-        cycle_timer = 12;
+        cycles = 12;
         return;
     }
     else if (reg == 0xFEA1) {
@@ -808,19 +835,19 @@ void LR35902::LD16(uint16_t& reg, uint16_t* src) {
         ram[addr] = stkp & 0xFF00;
         ram[addr + 1] = stkp & 0xFF00;
         pc += 3;
-        cycle_timer = 20;
+        cycles = 20;
         return;
     }
     else if (reg == HL && src == &stkp) {
         uint8_t sgn = ram[pc + 1];
         reg = *src + sgn;
         pc += 2;
-        cycle_timer = 12;
+        cycles = 12;
     }
     else {
         reg = *src;
         pc++;
-        cycle_timer = 8;
+        cycles = 8;
     }
 }
 
@@ -834,18 +861,18 @@ void LR35902::LDH(uint16_t reg, uint16_t src) {
     if (reg == 0xFFFF) {
         ram[(ram[pc + 1] | ram[pc + 2] << 8)] = (AF & 0xFF00) >> 8;
         pc += 3;
-        cycle_timer = 16;
+        cycles = 16;
     }
     else if (src == 0xFFFF) {
         set_reg(AF, 'h', ram[(ram[pc + 1] | ram[pc + 2] << 8)]);
         pc += 3;
-        cycle_timer = 16;
+        cycles = 16;
     }
     else if (reg == 0xFF) {
         cout << "ff00 + " + show_hex(ram[pc + 1]) << endl;
         ram[0xFF00 + ram[pc + 1]] = (AF & 0xFF00) >> 8;
         pc += 2;
-        cycle_timer = 12;
+        cycles = 12;
     }
     else if (src == 0xFF) {
         //cout << "ff00 + " + show_hex(ram[pc + 1]) << endl;
@@ -856,17 +883,17 @@ void LR35902::LDH(uint16_t reg, uint16_t src) {
         //cout << "after: " << show_hex(AF) << endl;
 
         pc += 2;
-        cycle_timer = 12;
+        cycles = 12;
     }
     else if (reg == BC) {
         ram[0xFF00 + (BC & 0x00FF)] = (AF & 0xFF00) >> 8;
         pc += 1;
-        cycle_timer = 8;
+        cycles = 8;
     }
     else if (src == BC) {
         set_reg(AF, 'h', ram[0xFF00 + (BC & 0x00FF)]);
         pc += 2;
-        cycle_timer = 8;
+        cycles = 8;
     }
 
 }
@@ -884,7 +911,7 @@ void LR35902::LD_MEM(uint16_t& reg, uint16_t src) {
         }
 
         pc++;
-        cycle_timer = 8;
+        cycles = 8;
     }
     else if (reg == AF) {
 
@@ -894,7 +921,7 @@ void LR35902::LD_MEM(uint16_t& reg, uint16_t src) {
         else if (opcode == 0x3A)
             HL--;
         pc++;
-        cycle_timer = 8;
+        cycles = 8;
     }
 
 
@@ -902,13 +929,13 @@ void LR35902::LD_MEM(uint16_t& reg, uint16_t src) {
 
 void LR35902::INC16(uint16_t& reg) {
     reg++;
-    cycle_timer = 8;
+    cycles = 8;
     pc++;
 }
 
 void LR35902::DEC16(uint16_t& reg) {
     reg--;
-    cycle_timer = 8;
+    cycles = 8;
     pc++;
 }
 
@@ -929,6 +956,7 @@ void LR35902::INC8(uint16_t& reg, char hilo) {
             set_flag(FLAG::Z);
         else
             set_flag(FLAG::Z, 0);
+        cycles = 4;
         return;
     }
 
@@ -954,7 +982,7 @@ void LR35902::INC8(uint16_t& reg, char hilo) {
 
 
 
-    cycle_timer = 1;
+    cycles = 4;
     pc++;
 }
 
@@ -977,7 +1005,7 @@ void LR35902::DEC8(uint16_t& reg, char hilo) {
         else
             set_flag(FLAG::H, 0);
         pc++;
-        cycle_timer = 12;
+        cycles = 12;
         return;
     }
 
@@ -1016,7 +1044,7 @@ void LR35902::DEC8(uint16_t& reg, char hilo) {
             set_flag(FLAG::H, 0);
     }
 
-    cycle_timer = 1;
+    cycles = 1;
     pc++;
 }
 
@@ -1090,7 +1118,7 @@ void LR35902::SUB(uint8_t reg) {
         else
             set_flag(Z, 0);
 
-        cycle_timer = 4;
+        cycles = 4;
         pc++;
         return;
     }
@@ -1120,7 +1148,7 @@ void LR35902::SUB(uint8_t reg) {
     set_reg(AF, 'h', A);
 
 
-    cycle_timer += 4;
+    cycles += 4;
     pc++;
     return;
 }
@@ -1152,9 +1180,9 @@ void LR35902::XOR(uint16_t reg, char hilo) {
     set_flag(FLAG::H, 0);
 
     pc++;
-    cycle_timer = 4;
+    cycles = 4;
     if (hilo == '-');
-        cycle_timer = 8;
+        cycles = 8;
 }
 
 void LR35902::OR(uint16_t reg, uint16_t half) {
@@ -1175,9 +1203,9 @@ void LR35902::OR(uint16_t reg, uint16_t half) {
     set_flag(FLAG::H, 0);
 
     pc++;
-    cycle_timer = 4;
+    cycles = 4;
     if (half == 0xFFFF)
-        cycle_timer = 8;
+        cycles = 8;
 }
 
 void LR35902::AND(uint16_t reg, uint16_t half) {
@@ -1198,9 +1226,9 @@ void LR35902::AND(uint16_t reg, uint16_t half) {
     set_flag(FLAG::N, 0);
 
     pc++;
-    cycle_timer = 4;
+    cycles = 4;
     if (half == 0xFFFF)
-        cycle_timer = 8;
+        cycles = 8;
 }
 
 
@@ -1216,7 +1244,7 @@ void LR35902::ADC(uint8_t *src) {
 
 
 
-        cycle_timer = 4;
+        cycles = 4;
         pc++;
     }
     
@@ -1225,7 +1253,7 @@ void LR35902::ADC(uint8_t *src) {
 
     set_flag(FLAG::N, 0);
 
-    cycle_timer = 4;
+    cycles = 4;
     pc++;
 }
 
@@ -1234,7 +1262,7 @@ void LR35902::PUSH(const uint16_t& reg) {
     ram[stkp] = (reg & 0xFF00) >> 8;
     stkp--;
     ram[stkp] = (reg & 0x00FF);
-    cycle_timer = 16;
+    cycles = 16;
     pc++;
 }
 
@@ -1242,7 +1270,7 @@ void LR35902::POP(uint16_t& reg) {
     reg = (ram[stkp] | ram[stkp + 1] << 8);
     stkp += 2;
     pc++;
-    cycle_timer = 3;
+    cycles = 3;
 }
 
 
@@ -1263,7 +1291,7 @@ void LR35902::CP(uint16_t reg, char hilo = 0) {
             set_flag(FLAG::H, 0);
         set_flag(FLAG::C, 0);
         pc += 2;
-        cycle_timer = 8;
+        cycles = 8;
         return;
     }
 
@@ -1288,7 +1316,7 @@ void LR35902::CP(uint16_t reg, char hilo = 0) {
     set_flag(FLAG::C, 0);
 
     pc++;
-    cycle_timer = 4;
+    cycles = 4;
 }
 
 
@@ -1296,7 +1324,7 @@ void LR35902::SCF() {
     set_flag(FLAG::N, 0);
     set_flag(FLAG::H, 0);
     set_flag(FLAG::C, 1);
-    cycle_timer = 1;
+    cycles = 1;
     pc++;
 }
 
@@ -1305,11 +1333,11 @@ void LR35902::SCF() {
 void LR35902::SLA(uint16_t& reg, uint16_t half) {
     if (reg == HL && half == 0xFFFF) {
         pc++;
-        cycle_timer = 16;
+        cycles = 16;
         return;
     }
     pc++;
-    cycle_timer = 8;
+    cycles = 8;
 }
 
 void LR35902::RL(uint16_t& reg, char hilo) {
@@ -1330,7 +1358,7 @@ void LR35902::RL(uint16_t& reg, char hilo) {
             set_flag(FLAG::Z, 0);
 
         pc += 2;
-        cycle_timer = 8;
+        cycles = 8;
         return;
     }
 
@@ -1359,7 +1387,7 @@ void LR35902::RL(uint16_t& reg, char hilo) {
     set_reg(reg, hilo, R);
 
     pc += 2;
-    cycle_timer = 8;
+    cycles = 8;
     return;
 
 }
@@ -1376,7 +1404,7 @@ void LR35902::RES(uint16_t& reg, char hilo, uint8_t bit) {
     else
         ram[reg] = ram[reg] & (0 << bit);
     pc += 2;
-    cycle_timer = 8;
+    cycles = 8;
 }
 
 void LR35902::SET(uint16_t& reg, char hilo, uint8_t bit) {
@@ -1387,7 +1415,7 @@ void LR35902::SET(uint16_t& reg, char hilo, uint8_t bit) {
     else
         ram[reg] = ram[reg] | (1 << bit);
     pc += 2;
-    cycle_timer = 8;
+    cycles = 8;
 }
 
 void LR35902::BIT(uint8_t bit, uint16_t reg, uint16_t half) {
@@ -1405,7 +1433,7 @@ void LR35902::BIT(uint8_t bit, uint16_t reg, uint16_t half) {
     set_flag(FLAG::N, 0);
     set_flag(FLAG::H);
     pc+=2;
-    cycle_timer = 8;
+    cycles = 8;
     if (half == 0x0000)
-        cycle_timer = 16;
+        cycles = 16;
 }
