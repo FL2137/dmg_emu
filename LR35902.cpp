@@ -476,7 +476,6 @@ void LR35902::lookup() {
     }
 }
 
-
 void LR35902::interrupts() {
 
     //check if interrupts are enabled
@@ -537,6 +536,17 @@ void LR35902::interrupts() {
     }
 }
 
+//#define DIV ram[0xFF04];
+//#define TIMA ram[0xFF05];
+//#define TMA ram[0xFF06];
+//#define TAC ram[0xFF07];
+
+void LR35902::handle_timers(int cycles) {
+    if (DIV_check != DIV) {
+        DIV = 0x00;
+
+    }
+}
 
 void LR35902::cycle() {
     
@@ -545,18 +555,19 @@ void LR35902::cycle() {
         set_bit(STAT, 2); //stat.2 = true 
     }
     
-    
     opcode = ram[pc];
     lookup();
 
     //checking if DMA register was written to, and if it was, launching DMA
-    if (DMA_check != ram[0xFF46]) { 
-        DMA_check = ram[0xFF46];
+    if (DMA_check) { 
         DMA();
     }
 
     //LCD routine
     LCD(cycles);
+
+
+    handle_timers(cycles);
 
     interrupts();
 
@@ -593,6 +604,22 @@ void LR35902::set_reg(uint16_t& reg, char hilo, uint8_t val) {
     }
     else
         cout << "INCORRECT REGISTER\n";
+}
+
+void LR35902::write_mem(uint16_t address, uint8_t value) {
+
+    //if DIV register is written to, then it is reset to 0x00
+    if (address == 0xFF04) {
+        DIV = 0x00;
+        return;
+    }
+    else if (address == 0xFF46) {
+        DMA_check = true;
+        ram[0xFF46] = value;
+        return;
+    }
+
+    ram[address] = value;
 }
 
 void LR35902::DI() {
@@ -749,7 +776,6 @@ void LR35902::CALL(FLAG f) {
     cycles = 12;
 }
 
-
 void LR35902::RET(FLAG f) {
     if (f == FLAG::NONE) {
         uint16_t newPC = (ram[stkp] | ram[stkp + 1] << 8);
@@ -777,7 +803,6 @@ void LR35902::RET(FLAG f) {
     cycles = 2;
 }
 
-
 void LR35902::RETI() {
     pc = (ram[stkp] | ram[stkp + 1] << 8);
     stkp += 2;
@@ -796,7 +821,7 @@ void LR35902::LD8(uint16_t& dst, char hilo, uint16_t* src, char hilo_src) {
             val = (*src & 0x00FF);
         else if (hilo_src == 'h')
             val = (*src & 0xFF00) >> 8;
-        ram[HL] = val;
+        write_mem(HL, val);
         pc++;
         cycles = 8;
         return;
@@ -829,6 +854,9 @@ void LR35902::LD16(uint16_t& reg, uint16_t* src) {
     }
     else if (reg == 0xFEA1) {
         uint16_t addr = (ram[pc + 1] << 8 | ram[pc + 2]);
+        write_mem(addr, stkp & 0xFF00);
+        write_mem(addr + 1, stkp )
+
         ram[addr] = stkp & 0xFF00;
         ram[addr + 1] = stkp & 0xFF00;
         pc += 3;
@@ -1304,12 +1332,25 @@ void LR35902::PUSH(const uint16_t& reg) {
 }
 
 void LR35902::POP(uint16_t& reg) {
+
+    //its possible that when POPing AF register flags should be set accordingly
+    if (reg == AF) {
+    
+        reg = (ram[stkp] | ram[stkp + 1] << 8);
+    
+        //??? set flags?
+        
+        stkp += 2;
+        pc++;
+        cycles = 12;
+        return;
+    }
+
     reg = (ram[stkp] | ram[stkp + 1] << 8);
     stkp += 2;
     pc++;
-    cycles = 3;
+    cycles = 12;
 }
-
 
 void LR35902::CP(uint16_t reg, char hilo = 0) {
     if (reg == 0x0000) {
@@ -1355,7 +1396,6 @@ void LR35902::CP(uint16_t reg, char hilo = 0) {
     pc++;
     cycles = 4;
 }
-
 
 void LR35902::SCF() {
     set_flag(FLAG::N, 0);

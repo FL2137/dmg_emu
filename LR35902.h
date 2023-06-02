@@ -32,7 +32,6 @@ public:
 
 	bool IME;
 
-	int dot_count;
 
 	int cycles_done = 0;
 
@@ -47,13 +46,22 @@ public:
 #define LCDC ram[0xFF40]
 #define STAT ram[0xFF41]
 
+#define CLOCKRATE 4194304
+
+#define DIV ram[0xFF04]
+#define TIMA ram[0xFF05]
+#define TMA ram[0xFF06]
+#define TAC ram[0xFF07]
+
 	
 	uint16_t stkp = 0xFFFE;
 	uint16_t pc = 0x0000;
 
 	uint8_t* ram;
 
-	uint8_t DMA_check;	
+	uint8_t DMA_check;
+	uint8_t DIV_check;
+
 
 	void DMA();
 
@@ -61,8 +69,8 @@ public:
 	void LCD(int cycles);
 
 	bool draw_flag = false;
-	int scan_cycles = 0;
-
+	int scan_cycles = 456;
+	int cycles = 0;
 
 	int get_bit(uint8_t obj, int nbit) {
 		return (obj & (1 << nbit)) >> nbit;
@@ -80,17 +88,21 @@ public:
 			throw out_of_range("wrong value of val");
 	}
 
-
 	bool check_flag(FLAG f);
 	void set_flag(FLAG f, int val = 1);
 	void print_flags();
 	
 	void set_reg(uint16_t& reg, char hilo, uint8_t val);
 
+	void write_mem(uint16_t address, uint8_t value);
+
 
 	void exec_interrupt(int interrupt);
 
 	void interrupts();
+	
+	void handle_timers(int cycles);
+		
 
 	void dummy_init() {
 		ram = new uint8_t[0xFFFF+1]{0};
@@ -106,7 +118,6 @@ public:
 
 		stkp = 0xFFFE;
 
-		ram[0xFF00] = 0xFF;
 		ram[0xFF05] = 0x00;
 		ram[0xFF06] = 0x00;
 		ram[0xFF07] = 0x00;
@@ -129,7 +140,7 @@ public:
 		ram[0xFF25] = 0xF3;
 		ram[0xFF26] = 0xF1;
 		ram[0xFF40] = 0x91;
-		ram[0xFF41] = 0x85;
+		ram[0xFF41] = 0x81;
 		ram[0xFF42] = 0x00;
 		ram[0xFF43] = 0x00;
 		ram[0xFF45] = 0x00;
@@ -140,6 +151,10 @@ public:
 		ram[0xFF4B] = 0x00;
 		ram[0xFFFF] = 0x00;
 
+		ram[0xFF44] = 90; // * __ *
+
+
+		DIV_check = 0xFF;
 	}
 	void cycle();
 
@@ -150,16 +165,13 @@ public:
 
 private:
 
-	
-
 	string address = " ";
 
-	
 	void NOP() {
 		cout << "NOP\n";
 		pc++;
+		cycles += 4;
 	}
-
 
 	using instruction = void (LR35902::*)();
 	instruction instructions[256]{ &LR35902::NOP };
@@ -211,7 +223,7 @@ private:
 
 	void SUB(uint8_t reg);
 
-	void ADC(uint8_t* src);
+	void ADC(uint16_t reg, char hilo);
 
 
 	void XOR(uint16_t reg, char hilo);
