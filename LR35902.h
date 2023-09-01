@@ -1,272 +1,243 @@
 #pragma once
-#include <iostream>
+#include "olcPixelGameEngine.h"
+#include <stdint.h>
 #include <string>
-#include <fstream>
-#include <functional>
-#include <vector>
+#include <iostream>
+
 using namespace std;
 
-class LR35902 {
-	//placeholding memory arrays
 
-public:
-	uint16_t AF = 0x0000;
-	uint16_t BC = 0x0000;
-	uint16_t DE = 0x3322;
-	uint16_t HL = 0x5511;
+class Processor {
 
-	enum FLAG {
-		NONE = 0,
-		Z = 1,
-		NZ = 2,
-		N = 3,
-		NN = 4,
-		H = 5,
-		NH = 6,
-		C = 7,
-		NC = 8,
-	};
-
-#define IE ram[0xFFFF]
-#define IF ram[0xFF0F]
-
-	bool IME;
-
-
-	int cycles_done = 0;
-
-	int opcode;
-	void lookup();
-
-	uint8_t* oam_scan();
-
-	uint8_t* get_tile(int index);
-
-
+    //defines
+public: //should be private
+    //LCD registers
 #define LCDC ram[0xFF40]
 #define STAT ram[0xFF41]
 
+//Timers 
 #define CLOCKRATE 4194304
-
 #define DIV ram[0xFF04]
 #define TIMA ram[0xFF05]
 #define TMA ram[0xFF06]
 #define TAC ram[0xFF07]
 
-	
-	uint16_t stkp = 0xFFFE;
-	uint16_t pc = 0x0000;
-
-	uint8_t* ram;
-
-	uint8_t DMA_check;
-	uint8_t DIV_check;
-
-
-	void DMA();
-
-	void set_lcd();
-	void LCD(int cycles);
-
-	bool draw_flag = false;
-	int scan_cycles = 456;
-	int cycles = 0;
-
-	int get_bit(uint8_t obj, int nbit) {
-		return (obj & (1 << nbit)) >> nbit;
-	}
-
-	void set_bit(uint8_t& obj, int nbit, int val = 1) {
-		if (nbit >= 8 || nbit < 0)
-			throw out_of_range("nbit out of range");
-
-		if (val == 1)
-			obj = (obj | (1 << nbit));
-		else if (val == 0)
-			obj &= ~(1 << nbit);
-		else
-			throw out_of_range("wrong value of val");
-	}
+//Interrupts
+#define IE ram[0xFFFF]
+#define IF ram[0xFF0F]
 
-	bool check_flag(FLAG f);
-	void set_flag(FLAG f, int val = 1);
-	void print_flags();
-	
-	void set_reg(uint16_t& reg, char hilo, uint8_t val);
+#define ROM_MAX 0x200000
+#define FRAME_CYCLES 69905
 
-	void write_mem(uint16_t address, uint8_t value);
-
 
-	void exec_interrupt(int interrupt);
+//end of defines
 
-	void interrupts();
-	
-	void handle_timers(int cycles);
-		
+public: //should be private
 
-	void dummy_init() {
-		ram = new uint8_t[0xFFFF+1]{0};
-		for (int i = 0; i <= 0xFFFF; i++)
-			ram[i] = 0x00;
+    Processor() {
+        ram = new uint8_t[0xFFFF]{ 0 };
+        AF = 0;
+        BC = 0;
+        DE = 0;
+        HL = 0;
+        SP = 0;
+    }
 
+    uint16_t AF, BC, DE, HL, SP;
 
-		AF = 0x01B0;
-		BC = 0x0013;
-		DE = 0x00D8;
-		HL = 0x014D;
-		pc = 0x100;
+    enum REG {
+        // NONE = 0,
+        // AF = 1,
+        // BC = 2,
+        // DE = 3,
+        // HL = 4
+    };
 
-		stkp = 0xFFFE;
+    enum FLAG {
+        NONE = -1,
+        NC = 0,
+        NH = 1,
+        NN = 2,
+        NZ = 3,
+        C = 4,
+        H = 5,
+        N = 6,
+        Z = 7
+    };
 
-		ram[0xFF05] = 0x00;
-		ram[0xFF06] = 0x00;
-		ram[0xFF07] = 0x00;
-		ram[0xFF10] = 0x80;
-		ram[0xFF11] = 0xBF;
-		ram[0xFF12] = 0xF3;
-		ram[0xFF14] = 0xBF;
-		ram[0xFF16] = 0x3F;
-		ram[0xFF17] = 0x00;
-		ram[0xFF19] = 0xBF;
-		ram[0xFF1A] = 0x7F;
-		ram[0xFF1B] = 0xFF;
-		ram[0xFF1C] = 0x9F;
-		ram[0xFF1E] = 0xBF;
-		ram[0xFF20] = 0xFF;
-		ram[0xFF21] = 0x00;
-		ram[0xFF22] = 0x00;
-		ram[0xFF23] = 0xBF;
-		ram[0xFF24] = 0x77;
-		ram[0xFF25] = 0xF3;
-		ram[0xFF26] = 0xF1;
-		ram[0xFF40] = 0x91;
-		ram[0xFF41] = 0x81;
-		ram[0xFF42] = 0x00;
-		ram[0xFF43] = 0x00;
-		ram[0xFF45] = 0x00;
-		ram[0xFF47] = 0xFC;
-		ram[0xFF48] = 0xFF;
-		ram[0xFF49] = 0xFF;
-		ram[0xFF4A] = 0x00;
-		ram[0xFF4B] = 0x00;
-		ram[0xFFFF] = 0x00;
+    enum INT {
+        VBLANK = 0,
+        LCDSTAT = 1,
+        TIMER = 2,
+        SERIAL = 3,
+        JOYPAD = 4
+    };
 
-		ram[0xFF44] = 90; // * __ *
+    uint8_t rom_memory[ROM_MAX]{ 0 };
 
+    uint8_t* ram; //console's memory
 
-		DIV_check = 0xFF;
-	}
-	void cycle();
+    olc::Pixel display[144][160];
 
-	void load_rom(const char* filename, string mbc);
-	void load_bootrom();
-	void init();
+    bool draw_flag = false;
 
+    uint16_t pc;
+    int opcode;
+    int op_cycles;
+    int scanline_cycles = 0;
 
-private:
+    int passed_cycles = 0;
 
-	string address = " ";
+    int IME;
 
-	void NOP() {
-		cout << "NOP\n";
-		pc++;
-		cycles += 4;
-	}
+    int timer_counter;
+    int div_counter;
 
-	using instruction = void (LR35902::*)();
-	instruction instructions[256]{ &LR35902::NOP };
+    int scanline;
 
-	int cycle_timer = 0;
+    bool mbc1 = false;
+    bool mbc2 = false;
+    bool no_mbc = false;
+    int current_bank;
+    bool booted = false;
 
+    //CORE FUNCTIONS
+    
+    void load_boot_routine();
 
-	int get_addr(uint8_t len);
-	
+    void load_rom(const char* filename);
 
-	void JP(FLAG f);
-	void JR(FLAG f);
+    void write_mem(uint16_t addr, uint8_t value);
 
+    uint8_t read_mem(uint16_t addr);
 
-	void CALL(FLAG f);
-	void RET(FLAG f);
-	void RETI();	
-		
-	
-	void HALT();
+    void cycle();
 
-	void DI();
-	void EI();
+    void lookup();
 
+    void timers();
 
+    void set_interrupt(int n);
 
-	void LD8(uint16_t& dst, char hilo, uint16_t* src, char hilo_src);
-	void LD16(uint16_t& reg, uint16_t* src);
-	void LD_MEM(uint16_t& reg, uint16_t src);
+    void interrupts();
 
+    void LCD();
 
-	void LDH(uint16_t reg, uint16_t src);
-	void LDHT(uint8_t& regm, uint8_t src);
+    void graphics();
 
+    void render_scanline();
 
+    void render_tiles();
 
-	void INC16(uint16_t& reg);
-	void DEC16(uint16_t& reg);
+    void render_sprites();
 
+    void launch_DMA(uint8_t data);
 
-	void INC8(uint16_t& reg, char hilo);
-	void DEC8(uint16_t& reg, char hilo);
+    void manage_banking();
 
+    void initialization();
 
-	void ADD16(uint16_t& dst, uint16_t src);
+    //UTILITY FUNCTIONS
 
+    int get_bit(uint8_t obj, int nbit);
 
-	void ADD8(uint16_t src, char hilo);
+    int get_bit(uint16_t obj, int nbit);
 
-	void SUB(uint8_t reg);
+    void set_bit(uint8_t& obj, int nbit, int val = 1);
 
-	void ADC(uint16_t reg, char hilo);
+    uint16_t get_reg16(REG reg);
 
+    void set_reg(uint16_t& reg, char hilo, uint8_t value);
 
-	void XOR(uint16_t reg, char hilo);
-	void OR(uint16_t reg, uint16_t half);
-	void AND(uint16_t reg, uint16_t half);
-	void CP(uint16_t reg, char hilo);
+    int get_flag(FLAG f);
 
-	void SCF();
+    void set_flag(FLAG f, int value = 1);
 
+    int8_t unsigned_to_signed(uint8_t u);
 
+    std::string get_hex(int n);
 
-	//CB PREFIXED FUNCTIONS
-	void SLA(uint16_t& reg, uint16_t half);
-	void RL(uint16_t& reg, char hilo);
-	void RLC(uint16_t& reg, char hilo);
 
-	void BIT(uint8_t bit, uint16_t reg, uint16_t half);
+    //CPU INSTRUCTIONS
 
-	void POP(uint16_t& reg);
-	void PUSH(const uint16_t &reg);
+    //miscellaneous
+    void NOP();
+    void STOP();
+    void HALT();
 
-	void RES(uint16_t& reg, char hilo, uint8_t bit);
-	void SET(uint16_t& reg, char hilo, uint8_t bit);
+    void DI();
+    void EI();
 
-public:
+    void DAA();
+    void SCF();
+    void CPL();
+    void CCF();
 
-	LR35902();
+    //LD instructions
 
+    void LD8(uint16_t& dst, char hilo, uint16_t* src, char srchilo);
+    void LD16(uint16_t* reg, uint16_t* src);
 
-	~LR35902() {
-		delete[] ram;
-	}
 
-	std::string show_hex(int n) {
-		std::string result = "";
-		const char* digits = "0123456789ABCDEF";
-		while (n > 0) {
-			result = digits[n % 16] + result;
-			n /= 16;
-		}
-		result = "0x" + result;
-		return result;
-	}
+    //INC DEC instructions
 
+    void INC8(uint16_t &reg, char hilo);
+    void INC16(uint16_t& inc);
+
+    void DEC8(uint16_t &reg, char hilo);
+    void DEC16(uint16_t& reg);
+
+
+    //Arithmetic instructions
+
+    void ADD8(uint16_t* reg, char hilo);
+    void ADD16(uint16_t* src);
+    void ADC8(uint16_t* reg, char hilo);
+
+    void SUB8(uint16_t* reg, char hilo);
+    void SBC8(uint16_t* reg, char hilo);
+
+    void AND(uint16_t* reg, char hilo);
+    void XOR(uint16_t* reg, char hilo);
+    void OR(uint16_t* reg, char hilo);
+
+    void CP(uint16_t* reg, char hilo);
+
+    void RLA();
+    void RLCA();
+
+    //Stack instructions
+
+    void POP(uint16_t& reg);
+    void PUSH(const uint16_t& reg);
+
+    //Jumps and Calls
+
+    void CALL(FLAG f);
+    void JR(FLAG f);
+    void JP(FLAG f);
+
+    void RET(FLAG f);
+    void RETI();
+
+    void RST();
+
+
+    //Extended xCB instructions
+
+
+    void RES(uint16_t* reg, char hilo, int bit);
+    void SET(uint16_t* reg, char hilo, int bit);
+
+    void RLC(uint16_t* reg, char hilo);
+    void RRC(uint16_t* reg, char hilo);
+
+    void RL(uint16_t* reg, char hilo);
+
+
+    void SWAP(uint16_t* reg, char hilo);
+
+    void BIT(uint16_t* reg, char hilo, int bit);
 
 };
+
