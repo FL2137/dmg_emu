@@ -9,6 +9,31 @@ void Processor::initialization() {
             display[y][x] = olc::Pixel(255, 255, 255, 255);
         }
     }
+
+    set_reg(AF, 'h', 0x11);
+    set_reg(AF, 'l', 0x80);
+    set_reg(BC, 'h', 0x00);
+    set_reg(BC, 'l', 0x13);
+    set_reg(DE, 'h', 0xFF);
+    set_reg(DE, 'l', 0x56);
+    set_reg(HL, 'h', 0x00);
+    set_reg(HL, 'l', 0x00);
+    
+
+    pc = 0x100; //start of the game rom
+
+    SP = 0xFFFE; //top of the stack
+
+    JOYP = 0xCF;
+    DIV = 0xAB;
+    TIMA = 0x00;
+    TMA = 0x00;
+    TAC = 0xF8;
+    IF = 0xE1;
+    IE = 0x00;
+    LCDC = 0x91;
+    STAT = 0x81;
+
 }
 
 void Processor::load_boot_routine() {
@@ -22,12 +47,13 @@ void Processor::load_boot_routine() {
         cout << "error loading boot routine\n";
         exit(-1);
     }
-    cout << "Loaded boot rom of size: " << size_read << endl;
+    //cout << "Loaded boot rom of size: " << size_read << endl;
 
-    for (int i = 0; i < size_read; i++) {
-        ram[i] = boot_rom[i];
-    }
-    current_bank = -1; //bootrom
+    //for (int i = 0; i < size_read; i++) {
+    //    ram[i] = boot_rom[i];
+    //}
+    //current_bank = -1; //bootrom
+
 
     fclose(f);
 }
@@ -116,11 +142,15 @@ void Processor::timers() {
     }
 }
 
+void Processor::joypad() {
+
+}
+
  void Processor::lookup() {
 
     switch (opcode) {
 
-        //8-bit Load instructions
+    //8-bit Load instructions
     case 0x02: LD8(BC, '-', &AF, -1); break;
     case 0x12: LD8(DE, '-', &AF, -1); break;
     case 0x22: LD8(HL, '-', &AF, -1); HL++; break;
@@ -219,7 +249,7 @@ void Processor::timers() {
     case 0xEA: LD8(AF, 0, &AF, 'E'); break;
     case 0xFA: LD8(AF, 0, &AF, 'F'); break;
 
-        //16-bit Load instructions
+    //16-bit Load instructions
     case 0x01: LD16(&BC, nullptr); break;
     case 0x11: LD16(&DE, nullptr); break;
     case 0x21: LD16(&HL, nullptr); break;
@@ -230,7 +260,7 @@ void Processor::timers() {
     case 0xF9: LD16(&SP, &HL);     break;
 
 
-        //8-bit ADD instructions
+    //8-bit ADD instructions
     case 0x80: ADD8(&BC, 'h'); break;
     case 0x81: ADD8(&BC, 'l'); break;
     case 0x82: ADD8(&DE, 'h'); break;
@@ -240,7 +270,8 @@ void Processor::timers() {
     case 0x86: ADD8(&HL, '-'); break;
     case 0x87: ADD8(&AF, 'h'); break;
     case 0xC6: ADD8(nullptr, 0); break;
-        //8-bit ADC instructions
+
+    //8-bit ADC instructions
     case 0x88: ADC8(&BC, 'h'); break;
     case 0x89: ADC8(&BC, 'l'); break;
     case 0x8A: ADC8(&DE, 'h'); break;
@@ -274,7 +305,7 @@ void Processor::timers() {
     case 0xDE: SBC8(nullptr, 0); break;
 
 
-        //8-bit increment and decrement instructions
+    //8-bit increment and decrement instructions
 
     case 0x04: INC8(BC, 'h'); break;
     case 0x14: INC8(DE, 'h'); break;
@@ -296,7 +327,7 @@ void Processor::timers() {
     case 0x2D: DEC8(HL, 'l'); break;
     case 0x3D: DEC8(AF, 'h'); break;
 
-        //16-bt increment and decrement instructions
+    //16-bt increment and decrement instructions
 
     case 0x03: INC16(BC); break;
     case 0x13: INC16(DE); break;
@@ -309,7 +340,7 @@ void Processor::timers() {
     case 0x3B: DEC16(SP); break;
 
 
-        //bitwise operations
+    //bitwise operations
 
     case 0xA0: AND(&BC, 'h'); break;
     case 0xA1: AND(&BC, 'l'); break;
@@ -401,40 +432,38 @@ void Processor::timers() {
     case 0x3F: CCF(); break;
     case 0x2F: CPL(); break;
 
-
-
         //extended instructions
     case 0xCB: {
         opcode = ram[pc + 1];
 
         switch (opcode) {
 
-        case 0x00: RLC(&BC, 'h'); break;
-        case 0x01: RLC(&BC, 'l'); break;
-        case 0x02: RLC(&DE, 'h'); break;
-        case 0x03: RLC(&DE, 'l'); break;
-        case 0x04: RLC(&HL, 'h'); break;
-        case 0x05: RLC(&HL, 'l'); break;
-        case 0x06: RLC(&HL, '-'); break;
-        case 0x07: RLC(&AF, 'h'); break;
+        case 0x00: RLC(BC, 'h'); break;
+        case 0x01: RLC(BC, 'l'); break;
+        case 0x02: RLC(DE, 'h'); break;
+        case 0x03: RLC(DE, 'l'); break;
+        case 0x04: RLC(HL, 'h'); break;
+        case 0x05: RLC(HL, 'l'); break;
+        case 0x06: RLC(HL, '-'); break;
+        case 0x07: RLC(AF, 'h'); break;
 
-        case 0x08: RRC(&BC, 'h'); break;
-        case 0x09: RRC(&BC, 'l'); break;
-        case 0x0A: RRC(&DE, 'h'); break;
-        case 0x0B: RRC(&DE, 'l'); break;
-        case 0x0C: RRC(&HL, 'h'); break;
-        case 0x0D: RRC(&HL, 'l'); break;
-        case 0x0E: RRC(&HL, '-'); break;
-        case 0x0F: RRC(&AF, 'h'); break;
+        case 0x08: RRC(BC, 'h'); break;
+        case 0x09: RRC(BC, 'l'); break;
+        case 0x0A: RRC(DE, 'h'); break;
+        case 0x0B: RRC(DE, 'l'); break;
+        case 0x0C: RRC(HL, 'h'); break;
+        case 0x0D: RRC(HL, 'l'); break;
+        case 0x0E: RRC(HL, '-'); break;
+        case 0x0F: RRC(AF, 'h'); break;
 
-        case 0x10: RL(&BC, 'h'); break;
-        case 0x11: RL(&BC, 'l'); break;
-        case 0x12: RL(&DE, 'h'); break;
-        case 0x13: RL(&DE, 'l'); break;
-        case 0x14: RL(&HL, 'h'); break;
-        case 0x15: RL(&HL, 'l'); break;
-        case 0x16: RL(&HL, '-'); break;
-        case 0x17: RL(&AF, 'h'); break;
+        case 0x10: RL(BC, 'h'); break;
+        case 0x11: RL(BC, 'l'); break;
+        case 0x12: RL(DE, 'h'); break;
+        case 0x13: RL(DE, 'l'); break;
+        case 0x14: RL(HL, 'h'); break;
+        case 0x15: RL(HL, 'l'); break;
+        case 0x16: RL(HL, '-'); break;
+        case 0x17: RL(AF, 'h'); break;
 
         case 0x30: SWAP(&BC, 'h'); break;
         case 0x31: SWAP(&BC, 'l'); break;
@@ -671,13 +700,6 @@ void Processor::timers() {
 
 void Processor::cycle() {
 
-    if(pc == 0x100) { //end of boot rom
-        for (int i = 0; i < 256; i++) {
-            ram[i] = rom_memory[i];
-        }
-    }   
-
-
     while (scanline_cycles < FRAME_CYCLES) {
         opcode = ram[pc];
         lookup();
@@ -742,7 +764,7 @@ void Processor::interrupts() {
                 pc = 0x60;
             }
 
-            //serial interrupt is missing, but it is probably optional
+            //serial interrupt is missing, but it's probably optional
 
         }
     }
@@ -1069,6 +1091,9 @@ void Processor::write_mem(uint16_t address, uint8_t value) {
     }
     else if (address == 0xFF44) {
         ram[address] = 0; //writing to LY always sets it to 0
+    }
+    else if (address == 0xFF50) { //turn off the boot rom and swap for the actual game rom
+        manage_banking();
     }
     else {
         ram[address] = value;
@@ -2047,10 +2072,12 @@ void Processor::SET(uint16_t* reg, char hilo, int bit) {
         op_cycles = 16;
 
         pc += 2;
+
+        return;
     }
-    else {
-        value = (hilo == 'h') ? ((*reg) >> 8) : ((*reg) & 0x00FF);
-    }
+    
+    value = (hilo == 'h') ? ((*reg) >> 8) : ((*reg) & 0x00FF);
+    
 
     value &= clear;
     value |= set;
@@ -2086,7 +2113,7 @@ void Processor::RES(uint16_t* reg, char hilo, int bit) {
 }
 
 //this instruction shifts a register to the left
-void Processor::RL(uint16_t* reg, char hilo) {
+void Processor::RL(uint16_t& reg, char hilo) {
 
     if (hilo == '-') {
         int bit7 = (ram[HL] >> 7);
@@ -2095,6 +2122,8 @@ void Processor::RL(uint16_t* reg, char hilo) {
 
         if (ram[HL] == 0)
             set_flag(Z);
+        else
+            set_flag(Z, 0);
 
 
         set_flag(N, 0);
@@ -2108,7 +2137,7 @@ void Processor::RL(uint16_t* reg, char hilo) {
         return;
     }
 
-    uint8_t R = (hilo == 'h') ? (*reg >> 8) : (*reg & 0x00FF);
+    uint8_t R = (hilo == 'h') ? (reg >> 8) : (reg & 0x00FF);
 
     int bit7 = (R >> 7);
     R <<= 1;
@@ -2121,15 +2150,61 @@ void Processor::RL(uint16_t* reg, char hilo) {
     set_flag(H, 0);
     set_flag(C, bit7);
 
-    set_reg(*reg, hilo, R);
+    set_reg(reg, hilo, R);
 
     op_cycles = 8;
     pc += 2;
 }
 
+//this instruction shifts a register to the right
+void Processor::RR(uint16_t& reg, char hilo) {
+    
+    if (hilo == '-') {
+        int bit0 = ram[HL] & 1;
+        int cy = get_flag(C);
+        ram[HL] >>= 1;
+        set_bit(ram[HL], 7, cy);
+
+        if (ram[HL] == 0)
+            set_flag(Z);
+        else
+            set_flag(Z, 0);
+
+        set_flag(N, 0);
+        set_flag(H, 0);
+        set_flag(C, bit0);
+
+        op_cycles = 16;
+        pc += 2;
+
+        return;
+    }
+
+    uint8_t R = (hilo == 'h') ? (reg >> 8) : (reg & 0x00FF);
+
+    int bit0 = R & 1;
+    int cy = get_flag(C);
+    R >>= 1;
+    set_bit(R, 7, cy);
+
+    if (R == 0)
+        set_flag(Z);
+    else
+        set_flag(Z, 0);
+
+    set_flag(N, 0);
+    set_flag(H, 0);
+    set_flag(C, bit0);
+
+    set_reg(reg, hilo, R);
+
+    op_cycles = 8;
+    pc += 2;
+    return;
+}
 
 //this instruction rotates the contents of the register to the left and places 7th bit in the CY flag
-void Processor::RLC(uint16_t* reg, char hilo) {
+void Processor::RLC(uint16_t &reg, char hilo) {
 
     if (hilo == '-') {
 
@@ -2140,6 +2215,8 @@ void Processor::RLC(uint16_t* reg, char hilo) {
 
         if (ram[HL] == 0)
             set_flag(Z);
+        else
+            set_flag(Z, 0);
 
         set_flag(C, bit7);
         set_flag(N, 0);
@@ -2152,7 +2229,7 @@ void Processor::RLC(uint16_t* reg, char hilo) {
         return;
     }
 
-    uint8_t R = (hilo == 'h') ? (*reg >> 8) : (*reg & 0x00FF);
+    uint8_t R = (hilo == 'h') ? (reg >> 8) : (reg & 0x00FF);
 
     int bit7 = (R >> 7);
 
@@ -2167,7 +2244,7 @@ void Processor::RLC(uint16_t* reg, char hilo) {
     set_flag(H, 0);
 
 
-    set_reg(*reg, hilo, R);
+    set_reg(reg, hilo, R);
 
     pc += 2;
     op_cycles = 8;
@@ -2175,7 +2252,7 @@ void Processor::RLC(uint16_t* reg, char hilo) {
 
 //pls test this
 //this instruction rotates the contents of the register to the right and places the first bit in the CY flag
-void Processor::RRC(uint16_t* reg, char hilo) {
+void Processor::RRC(uint16_t& reg, char hilo) {
 
     if (hilo == '-') {
 
@@ -2186,6 +2263,8 @@ void Processor::RRC(uint16_t* reg, char hilo) {
 
         if (ram[HL] == 0)
             set_flag(Z);
+        else
+            set_flag(Z, 0);
 
         set_flag(C, bit0);
         set_flag(N, 0);
@@ -2198,7 +2277,7 @@ void Processor::RRC(uint16_t* reg, char hilo) {
         return;
     }
 
-    uint8_t R = (hilo == 'h') ? (*reg >> 8) : (*reg & 0x00FF);
+    uint8_t R = (hilo == 'h') ? (reg >> 8) : (reg & 0x00FF);
 
     int bit0 = (R & 1);
 
@@ -2213,10 +2292,117 @@ void Processor::RRC(uint16_t* reg, char hilo) {
     set_flag(H, 0);
 
 
-    set_reg(*reg, hilo, R);
+    set_reg(reg, hilo, R);
 
     pc += 2;
     op_cycles = 8;
+}
+
+//this instruction shifts register to the left, leaving bit 0 reset
+void Processor::SLA(uint16_t& reg, char hilo) {
+
+    if (hilo == '-') {
+            
+        int bit7 = (ram[HL] >> 7);
+        ram[HL] <<= 1;
+        set_flag(C, bit7);
+
+        op_cycles = 16;
+        pc += 2;
+
+        return;
+    }
+
+    uint8_t R = (hilo == 'h') ? (reg >> 8) : (reg & 0x00FF);
+
+    int bit7 = R >> 7;
+
+    R <<= 1;
+
+    if (R == 0)
+        set_flag(Z);
+    else
+        set_flag(Z, 0);
+
+    set_flag(N, 0);
+    set_flag(H, 0);
+    set_flag(C, bit7);
+
+    set_reg(reg, hilo, R);
+
+    op_cycles = 8;
+    pc += 2;
+}
+
+void Processor::SRA(uint16_t& reg, char hilo) {
+    
+    if (hilo == '-') {
+        
+        int bit0 = ram[HL] & 1;
+        int bit7 = ram[HL] >> 7;
+        ram[HL] >>= 1;
+        ram[HL] |= (bit7 << 7);
+        set_flag(C, bit0);
+
+        op_cycles = 16;
+        pc += 2;
+        return;
+    }
+
+    uint8_t R = (hilo == 'h') ? (reg >> 8) : (reg & 0x00FF);
+
+    int bit0 = R & 1;
+    int bit7 = R >> 7;
+    R >>= 1;
+    R |= (bit7 << 7);
+
+    if (R == 0)
+        set_flag(Z);
+    else
+        set_flag(Z, 0);
+
+    set_flag(N, 0);
+    set_flag(H, 0);
+    set_flag(C, bit0);
+    set_reg(reg, hilo, R);
+
+    op_cycles = 8;
+    pc += 2;
+
+}
+
+void Processor::SRL(uint16_t& reg, char hilo) {
+
+    if (hilo == '-') {
+
+        int bit0 = ram[HL] & 1;
+        ram[HL] >>= 1;
+        set_flag(C, bit0);
+
+        op_cycles = 16;
+        pc += 2;
+        return;
+    }
+
+    uint8_t R = (hilo == 'h') ? (reg >> 8) : (reg & 0x00FF);
+
+    int bit0 = R & 1;
+    R >>= 1;
+
+
+    if (R == 0)
+        set_flag(Z);
+    else
+        set_flag(Z, 0);
+
+    set_flag(N, 0);
+    set_flag(H, 0);
+
+    set_flag(C, bit0);
+    set_reg(reg, hilo, R);
+
+    op_cycles = 8;
+    pc += 2;
 }
 
 //swap lower 4 bits of the register with its higher 4 bits
@@ -2328,4 +2514,3 @@ void Processor::RLCA() {
     pc++;
 
 }
-

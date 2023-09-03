@@ -26,6 +26,9 @@ public: //should be private
 #define IE ram[0xFFFF]
 #define IF ram[0xFF0F]
 
+//JOYPAD register
+#define JOYP ram[0xFF00]
+
 #define ROM_MAX 0x200000
 #define FRAME_CYCLES 69905
 
@@ -120,6 +123,8 @@ public: //should be private
     void set_interrupt(int n);
 
     void interrupts();
+
+    void joypad();
 
     void LCD();
 
@@ -225,19 +230,21 @@ public: //should be private
 
     //Extended xCB instructions
 
-
     void RES(uint16_t* reg, char hilo, int bit);
     void SET(uint16_t* reg, char hilo, int bit);
 
-    void RLC(uint16_t* reg, char hilo);
-    void RRC(uint16_t* reg, char hilo);
+    void RLC(uint16_t& reg, char hilo);
+    void RRC(uint16_t& reg, char hilo);
 
-    void RL(uint16_t* reg, char hilo);
+    void RL(uint16_t& reg, char hilo);
+    void RR(uint16_t& reg, char hilo);
 
+    void SLA(uint16_t& reg, char hilo);
+    void SRA(uint16_t& reg, char hilo);
+    void SRL(uint16_t& reg, char hilo);
 
     void SWAP(uint16_t* reg, char hilo);
 
     void BIT(uint16_t* reg, char hilo, int bit);
 
 };
-
