@@ -32,14 +32,15 @@ public:
 
 	olc::Pixel pixels[144][160] = { olc::WHITE };
 
+
+	bool displayVram = false;
+
 	char Macro = '-';
 	int steps = 0;
 	string Mode = "Debug";
 	string sbreakPoint = "";
 	int dbreakPoint = -1;
 
-
-	void RenderTiles();
 
 	int  checkBit(uint8_t obj, int nbit);
 
@@ -182,13 +183,14 @@ public:
 
 	}
 
-	void RenderSprites();
-
 	void input();
 
 	Gameboy(const Processor& cpu) :cpu(cpu) {
 		sAppName = "DMG01";
 	}
+	
+	void ShowVram();
+
 
 public:
 	bool OnUserCreate() override;
