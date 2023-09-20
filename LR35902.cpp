@@ -13,11 +13,11 @@ void Processor::initialization() {
     set_reg(AF, 'h', 0x11);
     set_reg(AF, 'l', 0x80);
     set_reg(BC, 'h', 0x00);
-    set_reg(BC, 'l', 0x13);
+    set_reg(BC, 'l', 0x00);
     set_reg(DE, 'h', 0xFF);
     set_reg(DE, 'l', 0x56);
     set_reg(HL, 'h', 0x00);
-    set_reg(HL, 'l', 0x00);
+    set_reg(HL, 'l', 0x0D);
     
 
     pc = 0x100; //start of the game rom
@@ -34,7 +34,414 @@ void Processor::initialization() {
     LCDC = 0x91;
     STAT = 0x81;
 
+
+
+    //nintendo logo
+
+    {
+        ram[0x8010] = 0xF0;
+        ram[0x8011] = 0x00;
+        ram[0x8012] = 0xF0;
+        ram[0x8013] = 0x00;
+        ram[0x8014] = 0xFC;
+        ram[0x8015] = 0x00;
+        ram[0x8016] = 0xFC;
+        ram[0x8017] = 0x00;
+        ram[0x8018] = 0xFC;
+        ram[0x8019] = 0x00;
+        ram[0x801a] = 0xFC;
+        ram[0x801b] = 0x00;
+        ram[0x801c] = 0xF3;
+        ram[0x801d] = 0x00;
+        ram[0x801e] = 0xF3;
+        ram[0x801f] = 0x00;
+        ram[0x8020] = 0x3C;
+        ram[0x8021] = 0x00;
+        ram[0x8022] = 0x3C;
+        ram[0x8023] = 0x00;
+        ram[0x8024] = 0x3C;
+        ram[0x8025] = 0x00;
+        ram[0x8026] = 0x3C;
+        ram[0x8027] = 0x00;
+        ram[0x8028] = 0x3C;
+        ram[0x8029] = 0x00;
+        ram[0x802a] = 0x3C;
+        ram[0x802b] = 0x00;
+        ram[0x802c] = 0x3C;
+        ram[0x802d] = 0x00;
+        ram[0x802e] = 0x3C;
+        ram[0x802f] = 0x00;
+        ram[0x8030] = 0xF0;
+        ram[0x8031] = 0x00;
+        ram[0x8032] = 0xF0;
+        ram[0x8033] = 0x00;
+        ram[0x8034] = 0xF0;
+        ram[0x8035] = 0x00;
+        ram[0x8036] = 0xF0;
+        ram[0x8037] = 0x00;
+        ram[0x8038] = 0x00;
+        ram[0x8039] = 0x00;
+        ram[0x803a] = 0x00;
+        ram[0x803b] = 0x00;
+        ram[0x803c] = 0xF3;
+        ram[0x803d] = 0x00;
+        ram[0x803e] = 0xF3;
+        ram[0x803f] = 0x00;
+        ram[0x8040] = 0x00;
+        ram[0x8041] = 0x00;
+        ram[0x8042] = 0x00;
+        ram[0x8043] = 0x00;
+        ram[0x8044] = 0x00;
+        ram[0x8045] = 0x00;
+        ram[0x8046] = 0x00;
+        ram[0x8047] = 0x00;
+        ram[0x8048] = 0x00;
+        ram[0x8049] = 0x00;
+        ram[0x804a] = 0x00;
+        ram[0x804b] = 0x00;
+        ram[0x804c] = 0xCF;
+        ram[0x804d] = 0x00;
+        ram[0x804e] = 0xCF;
+        ram[0x804f] = 0x00;
+        ram[0x8050] = 0x00;
+        ram[0x8051] = 0x00;
+        ram[0x8052] = 0x00;
+        ram[0x8053] = 0x00;
+        ram[0x8054] = 0x0F;
+        ram[0x8055] = 0x00;
+        ram[0x8056] = 0x0F;
+        ram[0x8057] = 0x00;
+        ram[0x8058] = 0x3F;
+        ram[0x8059] = 0x00;
+        ram[0x805a] = 0x3F;
+        ram[0x805b] = 0x00;
+        ram[0x805c] = 0x0F;
+        ram[0x805d] = 0x00;
+        ram[0x805e] = 0x0F;
+        ram[0x805f] = 0x00;
+        ram[0x8060] = 0x00;
+        ram[0x8061] = 0x00;
+        ram[0x8062] = 0x00;
+        ram[0x8063] = 0x00;
+        ram[0x8064] = 0x00;
+        ram[0x8065] = 0x00;
+        ram[0x8066] = 0x00;
+        ram[0x8067] = 0x00;
+        ram[0x8068] = 0xC0;
+        ram[0x8069] = 0x00;
+        ram[0x806a] = 0xC0;
+        ram[0x806b] = 0x00;
+        ram[0x806c] = 0x0F;
+        ram[0x806d] = 0x00;
+        ram[0x806e] = 0x0F;
+        ram[0x806f] = 0x00;
+        ram[0x8070] = 0x00;
+        ram[0x8071] = 0x00;
+        ram[0x8072] = 0x00;
+        ram[0x8073] = 0x00;
+        ram[0x8074] = 0x00;
+        ram[0x8075] = 0x00;
+        ram[0x8076] = 0x00;
+        ram[0x8077] = 0x00;
+        ram[0x8078] = 0x00;
+        ram[0x8079] = 0x00;
+        ram[0x807a] = 0x00;
+        ram[0x807b] = 0x00;
+        ram[0x807c] = 0xF0;
+        ram[0x807d] = 0x00;
+        ram[0x807e] = 0xF0;
+        ram[0x807f] = 0x00;
+        ram[0x8080] = 0x00;
+        ram[0x8081] = 0x00;
+        ram[0x8082] = 0x00;
+        ram[0x8083] = 0x00;
+        ram[0x8084] = 0x00;
+        ram[0x8085] = 0x00;
+        ram[0x8086] = 0x00;
+        ram[0x8087] = 0x00;
+        ram[0x8088] = 0x00;
+        ram[0x8089] = 0x00;
+        ram[0x808a] = 0x00;
+        ram[0x808b] = 0x00;
+        ram[0x808c] = 0xF3;
+        ram[0x808d] = 0x00;
+        ram[0x808e] = 0xF3;
+        ram[0x808f] = 0x00;
+        ram[0x8090] = 0x00;
+        ram[0x8091] = 0x00;
+        ram[0x8092] = 0x00;
+        ram[0x8093] = 0x00;
+        ram[0x8094] = 0x00;
+        ram[0x8095] = 0x00;
+        ram[0x8096] = 0x00;
+        ram[0x8097] = 0x00;
+        ram[0x8098] = 0x00;
+        ram[0x8099] = 0x00;
+        ram[0x809a] = 0x00;
+        ram[0x809b] = 0x00;
+        ram[0x809c] = 0xC0;
+        ram[0x809d] = 0x00;
+        ram[0x809e] = 0xC0;
+        ram[0x809f] = 0x00;
+        ram[0x80a0] = 0x03;
+        ram[0x80a1] = 0x00;
+        ram[0x80a2] = 0x03;
+        ram[0x80a3] = 0x00;
+        ram[0x80a4] = 0x03;
+        ram[0x80a5] = 0x00;
+        ram[0x80a6] = 0x03;
+        ram[0x80a7] = 0x00;
+        ram[0x80a8] = 0x03;
+        ram[0x80a9] = 0x00;
+        ram[0x80aa] = 0x03;
+        ram[0x80ab] = 0x00;
+        ram[0x80ac] = 0xFF;
+        ram[0x80ad] = 0x00;
+        ram[0x80ae] = 0xFF;
+        ram[0x80af] = 0x00;
+        ram[0x80b0] = 0xC0;
+        ram[0x80b1] = 0x00;
+        ram[0x80b2] = 0xC0;
+        ram[0x80b3] = 0x00;
+        ram[0x80b4] = 0xC0;
+        ram[0x80b5] = 0x00;
+        ram[0x80b6] = 0xC0;
+        ram[0x80b7] = 0x00;
+        ram[0x80b8] = 0xC0;
+        ram[0x80b9] = 0x00;
+        ram[0x80ba] = 0xC0;
+        ram[0x80bb] = 0x00;
+        ram[0x80bc] = 0xC3;
+        ram[0x80bd] = 0x00;
+        ram[0x80be] = 0xC3;
+        ram[0x80bf] = 0x00;
+        ram[0x80c0] = 0x00;
+        ram[0x80c1] = 0x00;
+        ram[0x80c2] = 0x00;
+        ram[0x80c3] = 0x00;
+        ram[0x80c4] = 0x00;
+        ram[0x80c5] = 0x00;
+        ram[0x80c6] = 0x00;
+        ram[0x80c7] = 0x00;
+        ram[0x80c8] = 0x00;
+        ram[0x80c9] = 0x00;
+        ram[0x80ca] = 0x00;
+        ram[0x80cb] = 0x00;
+        ram[0x80cc] = 0xFC;
+        ram[0x80cd] = 0x00;
+        ram[0x80ce] = 0xFC;
+        ram[0x80cf] = 0x00;
+        ram[0x80d0] = 0xF3;
+        ram[0x80d1] = 0x00;
+        ram[0x80d2] = 0xF3;
+        ram[0x80d3] = 0x00;
+        ram[0x80d4] = 0xF0;
+        ram[0x80d5] = 0x00;
+        ram[0x80d6] = 0xF0;
+        ram[0x80d7] = 0x00;
+        ram[0x80d8] = 0xF0;
+        ram[0x80d9] = 0x00;
+        ram[0x80da] = 0xF0;
+        ram[0x80db] = 0x00;
+        ram[0x80dc] = 0xF0;
+        ram[0x80dd] = 0x00;
+        ram[0x80de] = 0xF0;
+        ram[0x80df] = 0x00;
+        ram[0x80e0] = 0x3C;
+        ram[0x80e1] = 0x00;
+        ram[0x80e2] = 0x3C;
+        ram[0x80e3] = 0x00;
+        ram[0x80e4] = 0xFC;
+        ram[0x80e5] = 0x00;
+        ram[0x80e6] = 0xFC;
+        ram[0x80e7] = 0x00;
+        ram[0x80e8] = 0xFC;
+        ram[0x80e9] = 0x00;
+        ram[0x80ea] = 0xFC;
+        ram[0x80eb] = 0x00;
+        ram[0x80ec] = 0x3C;
+        ram[0x80ed] = 0x00;
+        ram[0x80ee] = 0x3C;
+        ram[0x80ef] = 0x00;
+        ram[0x80f0] = 0xF3;
+        ram[0x80f1] = 0x00;
+        ram[0x80f2] = 0xF3;
+        ram[0x80f3] = 0x00;
+        ram[0x80f4] = 0xF3;
+        ram[0x80f5] = 0x00;
+        ram[0x80f6] = 0xF3;
+        ram[0x80f7] = 0x00;
+        ram[0x80f8] = 0xF3;
+        ram[0x80f9] = 0x00;
+        ram[0x80fa] = 0xF3;
+        ram[0x80fb] = 0x00;
+        ram[0x80fc] = 0xF3;
+        ram[0x80fd] = 0x00;
+        ram[0x80fe] = 0xF3;
+        ram[0x80ff] = 0x00;
+        ram[0x8100] = 0xF3;
+        ram[0x8101] = 0x00;
+        ram[0x8102] = 0xF3;
+        ram[0x8103] = 0x00;
+        ram[0x8104] = 0xC3;
+        ram[0x8105] = 0x00;
+        ram[0x8106] = 0xC3;
+        ram[0x8107] = 0x00;
+        ram[0x8108] = 0xC3;
+        ram[0x8109] = 0x00;
+        ram[0x810a] = 0xC3;
+        ram[0x810b] = 0x00;
+        ram[0x810c] = 0xC3;
+        ram[0x810d] = 0x00;
+        ram[0x810e] = 0xC3;
+        ram[0x810f] = 0x00;
+        ram[0x8110] = 0xCF;
+        ram[0x8111] = 0x00;
+        ram[0x8112] = 0xCF;
+        ram[0x8113] = 0x00;
+        ram[0x8114] = 0xCF;
+        ram[0x8115] = 0x00;
+        ram[0x8116] = 0xCF;
+        ram[0x8117] = 0x00;
+        ram[0x8118] = 0xCF;
+        ram[0x8119] = 0x00;
+        ram[0x811a] = 0xCF;
+        ram[0x811b] = 0x00;
+        ram[0x811c] = 0xCF;
+        ram[0x811d] = 0x00;
+        ram[0x811e] = 0xCF;
+        ram[0x811f] = 0x00;
+        ram[0x8120] = 0x3C;
+        ram[0x8121] = 0x00;
+        ram[0x8122] = 0x3C;
+        ram[0x8123] = 0x00;
+        ram[0x8124] = 0x3F;
+        ram[0x8125] = 0x00;
+        ram[0x8126] = 0x3F;
+        ram[0x8127] = 0x00;
+        ram[0x8128] = 0x3C;
+        ram[0x8129] = 0x00;
+        ram[0x812a] = 0x3C;
+        ram[0x812b] = 0x00;
+        ram[0x812c] = 0x0F;
+        ram[0x812d] = 0x00;
+        ram[0x812e] = 0x0F;
+        ram[0x812f] = 0x00;
+        ram[0x8130] = 0x3C;
+        ram[0x8131] = 0x00;
+        ram[0x8132] = 0x3C;
+        ram[0x8133] = 0x00;
+        ram[0x8134] = 0xFC;
+        ram[0x8135] = 0x00;
+        ram[0x8136] = 0xFC;
+        ram[0x8137] = 0x00;
+        ram[0x8138] = 0x00;
+        ram[0x8139] = 0x00;
+        ram[0x813a] = 0x00;
+        ram[0x813b] = 0x00;
+        ram[0x813c] = 0xFC;
+        ram[0x813d] = 0x00;
+        ram[0x813e] = 0xFC;
+        ram[0x813f] = 0x00;
+        ram[0x8140] = 0xFC;
+        ram[0x8141] = 0x00;
+        ram[0x8142] = 0xFC;
+        ram[0x8143] = 0x00;
+        ram[0x8144] = 0xF0;
+        ram[0x8145] = 0x00;
+        ram[0x8146] = 0xF0;
+        ram[0x8147] = 0x00;
+        ram[0x8148] = 0xF0;
+        ram[0x8149] = 0x00;
+        ram[0x814a] = 0xF0;
+        ram[0x814b] = 0x00;
+        ram[0x814c] = 0xF0;
+        ram[0x814d] = 0x00;
+        ram[0x814e] = 0xF0;
+        ram[0x814f] = 0x00;
+        ram[0x8150] = 0xF3;
+        ram[0x8151] = 0x00;
+        ram[0x8152] = 0xF3;
+        ram[0x8153] = 0x00;
+        ram[0x8154] = 0xF3;
+        ram[0x8155] = 0x00;
+        ram[0x8156] = 0xF3;
+        ram[0x8157] = 0x00;
+        ram[0x8158] = 0xF3;
+        ram[0x8159] = 0x00;
+        ram[0x815a] = 0xF3;
+        ram[0x815b] = 0x00;
+        ram[0x815c] = 0xF0;
+        ram[0x815d] = 0x00;
+        ram[0x815e] = 0xF0;
+        ram[0x815f] = 0x00;
+        ram[0x8160] = 0xC3;
+        ram[0x8161] = 0x00;
+        ram[0x8162] = 0xC3;
+        ram[0x8163] = 0x00;
+        ram[0x8164] = 0xC3;
+        ram[0x8165] = 0x00;
+        ram[0x8166] = 0xC3;
+        ram[0x8167] = 0x00;
+        ram[0x8168] = 0xC3;
+        ram[0x8169] = 0x00;
+        ram[0x816a] = 0xC3;
+        ram[0x816b] = 0x00;
+        ram[0x816c] = 0xFF;
+        ram[0x816d] = 0x00;
+        ram[0x816e] = 0xFF;
+        ram[0x816f] = 0x00;
+        ram[0x8170] = 0xCF;
+        ram[0x8171] = 0x00;
+        ram[0x8172] = 0xCF;
+        ram[0x8173] = 0x00;
+        ram[0x8174] = 0xCF;
+        ram[0x8175] = 0x00;
+        ram[0x8176] = 0xCF;
+        ram[0x8177] = 0x00;
+        ram[0x8178] = 0xCF;
+        ram[0x8179] = 0x00;
+        ram[0x817a] = 0xCF;
+        ram[0x817b] = 0x00;
+        ram[0x817c] = 0xC3;
+        ram[0x817d] = 0x00;
+        ram[0x817e] = 0xC3;
+        ram[0x817f] = 0x00;
+        ram[0x8180] = 0x0F;
+        ram[0x8181] = 0x00;
+        ram[0x8182] = 0x0F;
+        ram[0x8183] = 0x00;
+        ram[0x8184] = 0x0F;
+        ram[0x8185] = 0x00;
+        ram[0x8186] = 0x0F;
+        ram[0x8187] = 0x00;
+        ram[0x8188] = 0x0F;
+        ram[0x8189] = 0x00;
+        ram[0x818a] = 0x0F;
+        ram[0x818b] = 0x00;
+        ram[0x818c] = 0xFC;
+        ram[0x818d] = 0x00;
+        ram[0x818e] = 0xFC;
+        ram[0x818f] = 0x00;
+        ram[0x8190] = 0x3C;
+        ram[0x8191] = 0x00;
+        ram[0x8192] = 0x42;
+        ram[0x8193] = 0x00;
+        ram[0x8194] = 0xB9;
+        ram[0x8195] = 0x00;
+        ram[0x8196] = 0xA5;
+        ram[0x8197] = 0x00;
+        ram[0x8198] = 0xB9;
+        ram[0x8199] = 0x00;
+        ram[0x819a] = 0xA5;
+        ram[0x819b] = 0x00;
+        ram[0x819c] = 0x42;
+        ram[0x819d] = 0x00;
+        ram[0x819e] = 0x3C;
+        ram[0x819f] = 0x00;
+    }
 }
+
 
 void Processor::load_boot_routine() {
     FILE* f;
@@ -87,7 +494,6 @@ void Processor::manage_banking() {
         }
         return;
     }
-
 
     if (cartridge_type == 0x00) {
         no_mbc = true;
@@ -146,30 +552,30 @@ void Processor::joypad() {
 
 }
 
- void Processor::lookup() {
+ void Processor::lookup()  {
 
     switch (opcode) {
 
     //8-bit Load instructions
-    case 0x02: LD8(BC, '-', &AF, -1); break;
-    case 0x12: LD8(DE, '-', &AF, -1); break;
-    case 0x22: LD8(HL, '-', &AF, -1); HL++; break;
-    case 0x32: LD8(HL, '-', &AF, -1); HL--; break;
+    case 0x02: LD8(BC, '2', &AF, -1); break;
+    case 0x12: LD8(DE, '2', &AF, -1); break;
+    case 0x22: LD8(HL, '2', &AF, -1); HL++; break;
+    case 0x32: LD8(HL, '2', &AF, -1); HL--; break;
 
-    case 0x0A: LD8(AF, '-', &BC, '-'); break;
-    case 0x1A: LD8(AF, '-', &DE, '-'); break;
-    case 0x2A: LD8(AF, '-', &HL, '-'); HL++; break;
-    case 0x3A: LD8(AF, '-', &HL, '-'); HL--; break;
+    case 0x0A: LD8(AF, 'A', &BC, '-'); break;
+    case 0x1A: LD8(AF, 'A', &DE, '-'); break;
+    case 0x2A: LD8(AF, 'A', &HL, '-'); HL++; break;
+    case 0x3A: LD8(AF, 'A', &HL, '-'); HL--; break;
 
-    case 0x06: LD8(BC, 'h', nullptr, NULL); break;
-    case 0x16: LD8(DE, 'h', nullptr, NULL); break;
-    case 0x26: LD8(HL, 'h', nullptr, NULL); break;
-    case 0x36: LD8(HL, '-', nullptr, NULL); break;
+    case 0x06: LD8(BC, 'h', nullptr, '6'); break;
+    case 0x16: LD8(DE, 'h', nullptr, '6'); break;
+    case 0x26: LD8(HL, 'h', nullptr, '6'); break;
+    case 0x36: LD8(HL, '-', nullptr, '6'); break;
 
-    case 0x0E: LD8(BC, 'l', nullptr, NULL); break;
-    case 0x1E: LD8(DE, 'l', nullptr, NULL); break;
-    case 0x2E: LD8(HL, 'l', nullptr, NULL); break;
-    case 0x3E: LD8(AF, 'h', nullptr, NULL); break;
+    case 0x0E: LD8(BC, 'l', nullptr, 'E'); break;
+    case 0x1E: LD8(DE, 'l', nullptr, 'E'); break;
+    case 0x2E: LD8(HL, 'l', nullptr, 'E'); break;
+    case 0x3E: LD8(AF, 'h', nullptr, 'E'); break;
 
     case 0x40: LD8(BC, 'h', &BC, 'h'); break;
     case 0x41: LD8(BC, 'h', &BC, 'l'); break;
@@ -340,6 +746,9 @@ void Processor::joypad() {
     case 0x3B: DEC16(SP); break;
 
 
+    //16-bit add instructions
+
+
     //bitwise operations
 
     case 0xA0: AND(&BC, 'h'); break;
@@ -383,8 +792,10 @@ void Processor::joypad() {
     case 0xFE: CP(nullptr, 0); break;
 
     case 0x07: RLCA(); break;
-    case 0x17: RLA(); break;
-
+    case 0x17: RLA();  break;
+        
+    case 0x0F: RRCA(); break;
+    case 0x1F: RRA();  break;
 
     //calls, jumps and returns
     case 0x20: JR(NZ); break;
@@ -412,7 +823,7 @@ void Processor::joypad() {
     case 0xD8: RET(C);  break;
     case 0xC9: RET(NONE); break;
 
-        //push and pop
+    //push and pop
     case 0xC1: POP(BC); break;
     case 0xD1: POP(DE); break;
     case 0xE1: POP(HL); break;
@@ -423,7 +834,7 @@ void Processor::joypad() {
     case 0xE5: PUSH(HL); break;
     case 0xF5: PUSH(AF); break;
 
-        //miscellaneous instructions
+    //miscellaneous instructions
     case 0x00: NOP(); break;
     case 0x10: STOP(); break;
     case 0xF3: DI(); break;
@@ -432,7 +843,7 @@ void Processor::joypad() {
     case 0x3F: CCF(); break;
     case 0x2F: CPL(); break;
 
-        //extended instructions
+    //extended instructions
     case 0xCB: {
         opcode = ram[pc + 1];
 
@@ -464,6 +875,42 @@ void Processor::joypad() {
         case 0x15: RL(HL, 'l'); break;
         case 0x16: RL(HL, '-'); break;
         case 0x17: RL(AF, 'h'); break;
+
+        case 0x18: RR(BC, 'h'); break;
+        case 0x19: RR(BC, 'l'); break;
+        case 0x1A: RR(DE, 'h'); break;
+        case 0x1B: RR(DE, 'l'); break;
+        case 0x1C: RR(HL, 'h'); break;
+        case 0x1D: RR(HL, 'l'); break;
+        case 0x1E: RR(HL, '-'); break;
+        case 0x1F: RR(AF, 'h'); break;
+
+        case 0x20: SLA(BC, 'h'); break;
+        case 0x21: SLA(BC, 'l'); break;
+        case 0x22: SLA(DE, 'h'); break;
+        case 0x23: SLA(DE, 'l'); break;
+        case 0x24: SLA(HL, 'h'); break;
+        case 0x25: SLA(HL, 'l'); break;
+        case 0x26: SLA(HL, '-'); break;
+        case 0x27: SLA(AF, 'h'); break;
+
+        case 0x28: SRA(BC, 'h'); break;
+        case 0x29: SRA(BC, 'l'); break;
+        case 0x2A: SRA(DE, 'h'); break;
+        case 0x2B: SRA(DE, 'l'); break;
+        case 0x2C: SRA(HL, 'h'); break;
+        case 0x2D: SRA(HL, 'l'); break;
+        case 0x2E: SRA(HL, '-'); break;
+        case 0x2F: SRA(AF, 'h'); break;
+
+        case 0x38: SRL(BC, 'h'); break;
+        case 0x39: SRL(BC, 'l'); break;
+        case 0x3A: SRL(DE, 'h'); break;
+        case 0x3B: SRL(DE, 'l'); break;
+        case 0x3C: SRL(HL, 'h'); break;
+        case 0x3D: SRL(HL, 'l'); break;
+        case 0x3E: SRL(HL, '-'); break;
+        case 0x3F: SRL(AF, 'h'); break;
 
         case 0x30: SWAP(&BC, 'h'); break;
         case 0x31: SWAP(&BC, 'l'); break;
@@ -546,7 +993,7 @@ void Processor::joypad() {
         case 0x7E: BIT(&HL, '-', 7); break;
         case 0x7F: BIT(&AF, 'h', 7); break;
 
-            /////////////////////////////////////////////
+        ///////////////////////////////////
 
         case 0x80: RES(&BC, 'h', 0); break;
         case 0x81: RES(&BC, 'l', 0); break;
@@ -691,7 +1138,6 @@ void Processor::joypad() {
         case 0xFD: RES(&HL, 'l', 7); break;
         case 0xFE: RES(&HL, '-', 7); break;
         case 0xFF: RES(&AF, 'h', 7); break;
-
 
         }
     }
@@ -977,6 +1423,8 @@ void Processor::render_sprites() {
                     display[ly][pixel_x].g = 00;
                     display[ly][pixel_x].b = 00;
                 }
+
+                
             }
         }
     }
@@ -1188,7 +1636,7 @@ void Processor::NOP() {
 }
 
 void Processor::STOP() {
-    pc += 1;
+    pc += 2;
     op_cycles = 4;
 }
 
@@ -1251,9 +1699,28 @@ void Processor::CCF() {
 
 //this instruction loads 8-bit data into half of 16-bit register pair or into ram
 //this instruction is written out of convetion kept in this project because writing it following convetion is annoying beyond my patience
+/*
 void Processor::LD8(uint16_t& dst, char hilo, uint16_t* src, char srchilo) {
+    
 
-    if (hilo == srchilo && &dst == &AF) { //case 0xXA
+
+    
+    if (opcode == 0xE2) { //0xE2
+        uint8_t C = (BC >> 8);
+        uint16_t address = 0xFF00 | C;
+        uint8_t A = (AF >> 8);
+        write_mem(address, A);
+        pc++;
+        op_cycles = 8;
+    }
+    else if (opcode == 0xF2) { //0xF2
+        uint8_t C = (BC >> 8);
+        uint16_t address = 0xFF00 | C;
+        set_reg(AF, 'h', ram[C]);
+        pc++;
+        op_cycles = 8;
+    }
+    else if (hilo == srchilo && &dst == &AF) { //case 0xXA
 
         if(src != nullptr)
         set_reg(AF, 'h', ram[*src]);
@@ -1281,32 +1748,20 @@ void Processor::LD8(uint16_t& dst, char hilo, uint16_t* src, char srchilo) {
     }
     else if (srchilo == 'E') { //0xEA
         uint16_t a16 = 0x0000;
-        a16 = (ram[pc + 1] << 8);
-        a16 |= ram[pc + 2];
+        a16 = ram[pc + 2] << 8;
+        a16 |= (ram[pc + 1]);
+
+        cout << "a16: " << get_hex(a16) << endl;
+
         uint8_t A = (AF >> 8);
         write_mem(a16, A);
         pc += 3;
         op_cycles = 16;
     }
-    else if (opcode == 0xE2) { //0xE2
-        uint8_t C = (BC >> 8);
-        uint16_t address = 0xFF00 | C;
-        uint8_t A = (AF >> 8);
-        write_mem(address, A);
-        pc++;
-        op_cycles = 8;
-    }
-    else if (opcode == 0xF2) { //0xF2
-        uint8_t C = (BC >> 8);
-        uint16_t address = 0xFF00 | C;
-        set_reg(AF, 'h', ram[C]);
-        pc++;
-        op_cycles = 8;
-    }
     else if (srchilo == 'F') { //0xFA
         uint16_t a16 = 0x0000;
-        a16 = (ram[pc + 1] << 8);
-        a16 |= ram[pc + 2];
+        a16 = ram[pc + 2] << 8;
+        a16 |= ram[pc + 1];
         set_reg(AF, 'h', ram[a16]);
         pc += 3;
         op_cycles = 16;
@@ -1348,6 +1803,119 @@ void Processor::LD8(uint16_t& dst, char hilo, uint16_t* src, char srchilo) {
       
         uint8_t R = (srchilo == 'h') ? ((*src) >> 8) : ((*src) & 0x00FF);
         set_reg(dst, hilo, R);
+        pc += 1;
+        op_cycles = 4;
+    }
+}
+*/
+
+
+void Processor::LD8(uint16_t &dst, char hilo, uint16_t* src, char srchilo) {
+
+    //
+    if (opcode == 0xE0) {
+        uint8_t a8 = ram[pc + 1];
+        uint16_t address = 0xFF00 | a8;
+
+        write_mem(address, (AF >> 8));
+
+        pc += 2;
+        op_cycles = 12;
+    }
+    else if (opcode == 0xF0) {
+        uint8_t a8 = ram[pc + 1];
+        uint16_t address = 0xFF00 | a8;
+
+        set_reg(AF, 'h', ram[address]);
+
+        pc += 2;
+        op_cycles = 12;
+    }
+    else if (opcode == 0xE2) {
+        uint8_t C = (BC >> 8);
+        uint16_t address = 0xFF00 | C;
+
+        write_mem(address, (AF >> 8));
+        
+        pc += 1;
+        op_cycles = 8;
+    }
+    else if (opcode == 0xF2) {
+        uint8_t C = (BC >> 8);
+        uint16_t address = 0xFF00 | C;
+
+        set_reg(AF, 'h', ram[address]);
+
+        pc += 1;
+        op_cycles = 8;
+    }
+    else if (opcode == 0xEA) {
+        uint16_t a16 = 0x0000;
+        a16 = ram[pc + 2] << 8;
+        a16 |= (ram[pc + 1]);
+        uint8_t A = (AF >> 8);
+        write_mem(a16, A);
+        pc += 3;
+        op_cycles = 16;
+    }
+    else if (opcode == 0xFA) {
+        uint16_t a16 = 0x0000;
+        a16 = ram[pc + 2] << 8;
+        a16 |= ram[pc + 1];
+        set_reg(AF, 'h', ram[a16]);
+        pc += 3;
+        op_cycles = 16;
+    }
+    else if (hilo == '2') { // x2
+        write_mem(dst, (AF >> 8));
+        pc += 1;
+        op_cycles = 8;
+    }
+    else if (srchilo == '6') { // x6
+
+        if (opcode == 0x36) {
+            write_mem(HL, ram[pc + 1]);
+            pc += 2;
+            op_cycles = 12;
+            return;
+        }
+
+        set_reg(dst, hilo, ram[pc + 1]);
+
+        pc += 2;
+        op_cycles = 8;
+    }
+    else if (hilo == 'A') { // xA
+        set_reg(AF, 'h', ram[*src]);
+        pc += 1;
+        op_cycles = 4;
+    }
+    else if (srchilo == 'E') { // xE
+        set_reg(dst, hilo, ram[pc + 1]);
+        pc += 2;
+        op_cycles = 8;
+    }
+    else { //default cases
+
+        if (dst == HL && hilo == '-') {
+            uint8_t val = (srchilo == 'h') ? ((*src) >> 8) : (*src & 0x00FF);
+            write_mem(HL, val);
+            pc += 1;
+            op_cycles = 8;
+            return;
+        }
+
+        if (src == &HL && srchilo == '-') {
+            set_reg(dst, hilo, ram[HL]);
+            pc += 1;
+            op_cycles = 4;
+            return;
+        }
+
+        uint8_t val = (srchilo == 'h') ? ((*src) >> 8) : (*src & 0x00FF);
+
+        set_reg(dst, hilo, val);
+
         pc += 1;
         op_cycles = 4;
     }
@@ -1515,6 +2083,8 @@ void Processor::ADD8(uint16_t* reg, char hilo) {
         value = (hilo == 'h') ? ((*reg) >> 8) : (*reg & 0x00FF);
     }
 
+    //cout << "VALUE: " << value;
+
     uint8_t A = (AF >> 8);
 
     set_flag(N, 0);
@@ -1538,7 +2108,6 @@ void Processor::ADD8(uint16_t* reg, char hilo) {
         set_flag(Z);
     else
         set_flag(Z, 0);
-
 
     set_reg(AF, 'h', A);
 
@@ -2513,4 +3082,44 @@ void Processor::RLCA() {
     op_cycles = 4;
     pc++;
 
+}
+
+
+//shift content of the accumulator to the right through carry flag
+void Processor::RRA() {
+
+    uint8_t A = (AF >> 8);
+
+    int bit0 = A & 1;
+    int cy = get_flag(C);
+
+    A |= (cy << 7);
+
+    set_flag(C, bit0);
+    set_flag(Z, 0);
+    set_flag(N, 0);
+    set_flag(H, 0);
+
+    set_reg(AF, 'h', A);
+
+    op_cycles = 4;
+    pc += 1;
+}
+
+void Processor::RRCA() {
+    uint8_t A = (AF >> 8);
+
+    int bit0 = A & 1;
+    
+    A |= (bit0 << 7);
+
+    set_flag(C, bit0);
+    set_flag(Z, 0);
+    set_flag(N, 0);
+    set_flag(H, 0);
+
+    set_reg(AF, 'h', A);
+
+    op_cycles = 4;
+    pc += 1;
 }
