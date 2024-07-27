@@ -211,6 +211,9 @@ public: //should be private
     void RLA();
     void RLCA();
 
+    void RRCA();
+    void RRA();
+
     //Stack instructions
 
     void POP(uint16_t& reg);
