@@ -9,7 +9,6 @@ using namespace std;
 
 class Processor {
 
-    //defines
 public: //should be private
     //LCD registers
 #define LCDC ram[0xFF40]

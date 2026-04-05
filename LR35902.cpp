@@ -35,7 +35,6 @@ void Processor::initialization() {
     STAT = 0x81;
 
 
-
     //nintendo logo
 
     {

@@ -185,7 +185,7 @@ public:
 
 	void input();
 
-	Gameboy(const Processor& cpu) :cpu(cpu) {
+	Gameboy(const Processor& cpu) : cpu(cpu) {
 		sAppName = "DMG01";
 	}
 	

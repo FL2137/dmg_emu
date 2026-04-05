@@ -23,43 +23,22 @@ using namespace std;
 
 // }
 
-/*
-3C
-00
-42
-00
-B9
-00
-A5
-00
-B9
-00
-A5
-00
-42
-00
-3C
-00
-*/
+Processor proc{};
 
-
-//now testing ADC8
 int main() {
 
 
+    proc.load_rom("Testers/testld.gb");
+    proc.load_boot_routine();
+    proc.initialization();
 
-    Processor *proc = new Processor();
-    
-
-    proc->load_rom("tetris.gb");
-    proc->load_boot_routine();
-    proc->initialization();
-
-    Gameboy* game = new Gameboy(*proc);
+    Gameboy* game = new Gameboy(proc);
     if (game->Construct(160 * 5, 144 * 5, 1, 1))
         game->Start();
 
 
     getchar();
+
+
     return 0;
 }
